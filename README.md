@@ -1,376 +1,345 @@
-## Funcionamiento base de la API
+# 🚚 ShipNow API
 
-ShipNow API es una aplicación backend construida con Node.js, Express y MongoDB.
+API REST para la gestión de usuarios, productos, comercios y pedidos, desarrollada con **Node.js, Express y MongoDB**.
 
-En su estado base, la API permite trabajar con tres entidades principales:
+Este proyecto simula el funcionamiento básico de una plataforma de logística y envíos.
 
-* Usuarios
-* Comercios
-* Pedidos
-
-La idea del proyecto es simular una API simple de logística/envíos.
-
-Un usuario puede representar a un cliente.
-Un comercio representa el lugar desde donde sale el pedido.
-Un pedido representa una solicitud de envío asociada a un usuario y a un comercio.
-
-### Flujo principal
-
-El flujo básico de la API es:
-
-1. Crear un usuario.
-2. Crear un comercio.
-3. Crear un pedido usando el ID del usuario y el ID del comercio.
-4. Consultar los pedidos.
-5. Actualizar el estado de un pedido.
-
-El pedido contiene una lista de items, una dirección de entrega, un total calculado y un estado.
-
-### Entidades principales
-
-### User
-
-Representa a un usuario dentro del sistema.
-
-Campos principales:
-
-```json
-{
-  "firstName": "Martina",
-  "lastName": "Gómez",
-  "email": "martina@test.com",
-  "password": "123456",
-  "role": "customer"
-}
-```
-
-Roles disponibles:
-
-```txt
-admin
-customer
-store
-```
-
-En esta versión base, el usuario se usa principalmente como cliente del pedido.
+En la **Pre-entrega del Módulo 1**, se refactorizó la API para implementar una arquitectura profesional basada en **Controller → Service → Repository**, incorporando configuración centralizada de variables de entorno, constantes de dominio y separación de responsabilidades.
 
 ---
 
-### Store
+## 🛠️ Tecnologías utilizadas
 
-Representa un comercio.
-
-Campos principales:
-
-```json
-{
-  "name": "Kiosco Centro",
-  "address": "Av. Siempre Viva 742",
-  "owner": "ID_DEL_USUARIO"
-}
-```
-
-El campo `owner` guarda el ID de un usuario asociado al comercio.
+- **Node.js:** entorno de ejecución de JavaScript.
+- **Express:** framework para construir la API REST.
+- **MongoDB:** base de datos NoSQL.
+- **Mongoose:** modelado y acceso a MongoDB.
+- **dotenv:** administración de variables de entorno.
+- **bcrypt:** hash seguro de contraseñas.
+- **CORS:** configuración de acceso entre orígenes.
+- **Nodemon:** reinicio automático del servidor durante el desarrollo.
 
 ---
 
-### Order
+## 🏗️ Arquitectura del proyecto
 
-Representa un pedido o envío.
+La aplicación utiliza una arquitectura de tres capas:
 
-Campos principales:
+**Router → Controller → Service → Repository → Model → MongoDB**
 
-```json
-{
-  "customer": "ID_DEL_USUARIO",
-  "store": "ID_DEL_COMERCIO",
-  "deliveryAddress": "Av. Siempre Viva 742",
-  "items": [
-    {
-      "name": "Caja mediana",
-      "quantity": 2,
-      "price": 1500
-    }
-  ]
-}
+### Responsabilidades
+
+**Routes**
+- Definen los endpoints disponibles.
+- Conectan cada ruta con su Controller.
+- No contienen lógica de negocio.
+
+**Controllers**
+- Reciben las peticiones HTTP.
+- Obtienen parámetros y datos del request.
+- Invocan los métodos del Service.
+- Devuelven respuestas JSON y códigos HTTP.
+
+**Services**
+- Implementan las reglas de negocio.
+- Validan los datos recibidos.
+- Controlan las operaciones permitidas.
+- Coordinan el acceso a los Repositories.
+
+**Repositories**
+- Encapsulan las consultas a MongoDB mediante Mongoose.
+- Implementan filtros, proyecciones y ordenamientos.
+- Se encargan de buscar, crear, actualizar y eliminar documentos.
+
+**Models**
+- Definen los esquemas y validaciones de Mongoose.
+
+Esta separación permite mejorar la organización, mantenibilidad y escalabilidad del proyecto.
+
+---
+
+## 📁 Estructura de carpetas
+
+```text
+src/
+├── config/
+│   ├── db.js
+│   └── index.js
+│
+├── controllers/
+│   ├── users.controller.js
+│   ├── products.controller.js
+│   ├── stores.controller.js
+│   └── orders.controller.js
+│
+├── models/
+│   ├── user.model.js
+│   ├── product.model.js
+│   ├── store.model.js
+│   └── order.model.js
+│
+├── repositories/
+│   ├── users.repository.js
+│   ├── products.repository.js
+│   ├── stores.repository.js
+│   └── orders.repository.js
+│
+├── routes/
+│   ├── users.router.js
+│   ├── products.router.js
+│   ├── stores.router.js
+│   └── orders.router.js
+│
+├── services/
+│   ├── users.service.js
+│   ├── products.service.js
+│   ├── stores.service.js
+│   └── orders.service.js
+│
+├── utils/
+│   └── constants.js
+│
+├── app.js
+└── server.js
 ```
 
-Cuando se crea un pedido, la API calcula el total automáticamente recorriendo los items.
+---
 
-Ejemplo:
+## ⚙️ Instalación y configuración
 
-```txt
-2 unidades x $1500 = $3000
+### 1. Clonar el repositorio
+
+```bash
+git clone URL_DEL_REPOSITORIO
+cd shipnow-api-95295
 ```
 
-El pedido se crea inicialmente con estado:
+Reemplazar `URL_DEL_REPOSITORIO` por la dirección del repositorio correspondiente.
 
-```txt
-created
+### 2. Instalar dependencias
+
+```bash
+npm install
 ```
 
-Estados posibles del pedido:
+### 3. Configurar variables de entorno
 
-```txt
-created
-assigned
-picked_up
-in_transit
-delivered
-cancelled
+Crear un archivo `.env` en la raíz del proyecto, tomando como referencia `.env.example`.
+
+Ejemplo para MongoDB local:
+
+```env
+PORT=8080
+MONGODB_URI=mongodb://127.0.0.1:27017/shipnow
+NODE_ENV=development
 ```
 
-### Endpoints disponibles
+| Variable | Descripción | Obligatoria |
+|---|---|---|
+| `PORT` | Puerto del servidor. Valor predeterminado: 8080 | No |
+| `MONGODB_URI` | Dirección de conexión a MongoDB | Sí |
+| `NODE_ENV` | Entorno de ejecución | No |
 
-### Health check
+La configuración se centraliza en `src/config/index.js`.
 
-Permite verificar que la API está funcionando.
+Si falta `MONGODB_URI`, la aplicación genera un error descriptivo y no inicia.
 
-```http
-GET /health
+El archivo `.env` está incluido en `.gitignore` para evitar publicar credenciales.
+
+### 4. Iniciar MongoDB
+
+Verificar que el servicio de MongoDB esté funcionando y que la dirección configurada en `MONGODB_URI` sea correcta.
+
+### 5. Ejecutar la aplicación
+
+**Modo desarrollo:**
+
+```bash
+npm run dev
 ```
+
+**Modo normal:**
+
+```bash
+npm start
+```
+
+Servidor:
+
+`http://localhost:8080`
+
+### 6. Verificar funcionamiento
+
+**GET** `/health`
 
 Respuesta esperada:
 
 ```json
 {
   "status": "success",
-  "message": "API funcionando correctamente"
+  "message": "API funcionando"
 }
 ```
 
 ---
 
-## Users
+## 👤 Usuarios (Users)
 
-### Obtener usuarios
+Permite administrar los usuarios de ShipNow.
 
-```http
-GET /api/users
-```
+### Endpoints
 
-### Obtener usuario por ID
-
-```http
-GET /api/users/:uid
-```
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/users` | Listar usuarios |
+| GET | `/api/users/:uid` | Obtener usuario por ID |
+| POST | `/api/users` | Crear usuario |
+| PUT | `/api/users/:uid` | Actualizar usuario |
+| DELETE | `/api/users/:uid` | Eliminar usuario |
 
 ### Crear usuario
 
-```http
-POST /api/users
-```
-
-Body de ejemplo:
+**POST** `/api/users`
 
 ```json
 {
   "firstName": "Martina",
   "lastName": "Gómez",
   "email": "martina@test.com",
-  "password": "123456",
-  "role": "customer"
+  "password": "123456"
 }
 ```
 
-### Actualizar usuario
+### Reglas de negocio
 
-```http
-PUT /api/users/:uid
+- Las contraseñas se almacenan utilizando bcrypt.
+- Las respuestas de usuarios no exponen las contraseñas.
+- Los usuarios nuevos reciben el rol `customer`.
+- El endpoint general de actualización permite modificar nombre y apellido.
+- No se permite modificar el rol o la contraseña mediante ese endpoint.
+
+### Roles disponibles
+
+Los roles se centralizan mediante `USER_ROLES` en `src/utils/constants.js`.
+
+| Constante | Valor |
+|---|---|
+| `ADMIN` | `admin` |
+| `USER` | `customer` |
+| `STORE` | `store` |
+
+---
+
+## 📦 Productos (Products)
+
+Permite administrar el catálogo de productos.
+
+### Endpoints
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/products` | Listar productos activos |
+| GET | `/api/products/:pid` | Obtener producto por ID |
+| POST | `/api/products` | Crear producto |
+| PUT | `/api/products/:pid` | Actualizar producto |
+| DELETE | `/api/products/:pid` | Eliminar producto |
+
+### Crear producto
+
+**POST** `/api/products`
+
+```json
+{
+  "name": "Auriculares Bluetooth",
+  "description": "Auriculares inalámbricos con micrófono",
+  "price": 25000,
+  "stock": 15,
+  "category": "Electrónica"
+}
 ```
 
-### Eliminar usuario
+### Reglas de negocio
 
-```http
-DELETE /api/users/:uid
+- Nombre y categoría obligatorios.
+- Precio numérico mayor o igual a cero.
+- Stock entero mayor o igual a cero.
+- Los productos nuevos se crean con `isActive: true`.
+- El listado general muestra únicamente productos activos.
+- Las actualizaciones se limitan a campos autorizados.
+- El Repository aplica filtros, proyecciones y ordenamiento por fecha.
+
+### Ejemplo de actualización
+
+**PUT** `/api/products/:pid`
+
+```json
+{
+  "price": 30000,
+  "stock": 20
+}
 ```
 
 ---
 
-## Stores
+## 🏪 Comercios (Stores)
 
-### Obtener comercios
+Permite administrar los comercios asociados a los pedidos.
 
-```http
-GET /api/stores
-```
+### Endpoints
 
-### Obtener comercio por ID
-
-```http
-GET /api/stores/:sid
-```
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/stores` | Listar comercios activos |
+| GET | `/api/stores/:sid` | Obtener comercio por ID |
+| POST | `/api/stores` | Crear comercio |
+| PUT | `/api/stores/:sid` | Actualizar comercio |
+| DELETE | `/api/stores/:sid` | Eliminar comercio |
 
 ### Crear comercio
 
-```http
-POST /api/stores
-```
-
-Body de ejemplo:
+**POST** `/api/stores`
 
 ```json
 {
   "name": "Kiosco Centro",
-  "address": "Av. Siempre Viva 742",
+  "address": "San Martín 1250, Rosario",
   "owner": "ID_DEL_USUARIO"
 }
 ```
 
-### Actualizar comercio
+### Reglas de negocio
 
-```http
-PUT /api/stores/:sid
-```
-
-### Eliminar comercio
-
-```http
-DELETE /api/stores/:sid
-```
+- Nombre, dirección y propietario obligatorios.
+- Se verifica que el propietario exista.
+- Los comercios nuevos se crean activos.
+- El listado general devuelve comercios activos.
+- Las actualizaciones se limitan a nombre, dirección y estado de actividad.
 
 ---
 
-## Orders
+## 🚚 Pedidos (Orders)
 
-### Obtener pedidos
+Permite crear y administrar pedidos de envío.
 
-```http
-GET /api/orders
-```
+Cada pedido está asociado a un usuario y a un comercio.
 
-### Obtener pedido por ID
+### Endpoints
 
-```http
-GET /api/orders/:oid
-```
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/orders` | Listar pedidos |
+| GET | `/api/orders/:oid` | Obtener pedido por ID |
+| POST | `/api/orders` | Crear pedido |
+| PUT | `/api/orders/:oid/status` | Actualizar estado |
+| DELETE | `/api/orders/:oid` | Eliminar pedido |
 
 ### Crear pedido
 
-```http
-POST /api/orders
-```
-
-Body de ejemplo:
+**POST** `/api/orders`
 
 ```json
 {
   "customer": "ID_DEL_USUARIO",
   "store": "ID_DEL_COMERCIO",
-  "deliveryAddress": "Av. Siempre Viva 742",
+  "deliveryAddress": "Mendoza 1200, Rosario",
   "items": [
-    {
-      "name": "Caja mediana",
-      "quantity": 2,
-      "price": 1500
-    },
-    {
-      "name": "Sobre chico",
-      "quantity": 1,
-      "price": 800
-    }
-  ]
-}
-```
-
-Respuesta esperada:
-
-```json
-{
-  "status": "success",
-  "payload": {
-    "_id": "ID_DEL_PEDIDO",
-    "customer": "ID_DEL_USUARIO",
-    "store": "ID_DEL_COMERCIO",
-    "items": [
-      {
-        "name": "Caja mediana",
-        "quantity": 2,
-        "price": 1500
-      },
-      {
-        "name": "Sobre chico",
-        "quantity": 1,
-        "price": 800
-      }
-    ],
-    "deliveryAddress": "Av. Siempre Viva 742",
-    "total": 3800,
-    "status": "created"
-  }
-}
-```
-
-### Actualizar estado del pedido
-
-```http
-PUT /api/orders/:oid/status
-```
-
-Body de ejemplo:
-
-```json
-{
-  "status": "in_transit"
-}
-```
-
-### Eliminar pedido
-
-```http
-DELETE /api/orders/:oid
-```
-
----
-
-## Formato general de respuestas
-
-Las respuestas exitosas siguen una estructura simple:
-
-```json
-{
-  "status": "success",
-  "payload": {}
-}
-```
-
-Las respuestas de error, en esta versión base, todavía se manejan de forma simple desde las rutas:
-
-```json
-{
-  "status": "error",
-  "message": "Usuario no encontrado"
-}
-```
-
-Más adelante, el proyecto será refactorizado para incorporar una capa centralizada de manejo de errores.
-
-## Estado actual del proyecto
-
-Esta versión base de ShipNow funciona, pero todavía no representa una API completamente profesional.
-
-Actualmente el proyecto tiene:
-
-```txt
-app.js
-server.js
-models
-routes
-config/db.js
-```
-
-Todavía no incorpora:
-
-```txt
-controllers
-services
-repositories
-middleware global de errores
-logger profesional
-Swagger
-tests automatizados
-Multer
-Docker
-```
-
-Durante el curso, la API será mejorada progresivamente para separar responsabilidades, mejorar la mantenibilidad y acercarse a una estructura más profesional.

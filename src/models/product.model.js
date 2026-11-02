@@ -1,5 +1,6 @@
 
 import mongoose from "mongoose";
+import { PRODUCT_STATUS } from "../utils/constants.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -20,17 +21,17 @@ const productSchema = new mongoose.Schema(
     stock: {
       type: Number,
       required: true,
-      min: 0,
-      default: 0
+      min: 0
     },
     category: {
       type: String,
       required: true,
       trim: true
     },
-    isActive: {
-      type: Boolean,
-      default: true
+    status: {
+      type: String,
+      enum: Object.values(PRODUCT_STATUS),
+      default: PRODUCT_STATUS.AVAILABLE
     }
   },
   {

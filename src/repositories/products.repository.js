@@ -1,17 +1,20 @@
 
 import ProductModel from "../models/product.model.js";
+import { PRODUCT_STATUS } from "../utils/constants.js";
 
 class ProductsRepository {
   async getAll() {
-    return ProductModel.find({ isActive: true })
-      .select("name description price stock category isActive createdAt updatedAt")
+    return ProductModel.find({
+      status: PRODUCT_STATUS.AVAILABLE
+    })
+      .select("name description price stock category status createdAt updatedAt")
       .sort({ createdAt: -1 })
       .lean();
   }
 
   async getById(id) {
     return ProductModel.findById(id)
-      .select("name description price stock category isActive createdAt updatedAt")
+      .select("name description price stock category status createdAt updatedAt")
       .lean();
   }
 

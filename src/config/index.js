@@ -11,14 +11,35 @@ for (const variable of requiredVariables) {
   }
 }
 
-const config = Object.freeze({
-  port: Number(process.env.PORT || 8080),
-  mongodbUri: process.env.MONGODB_URI,
-  nodeEnv: process.env.NODE_ENV || "development"
-});
+const allowedEnvironments = [
+  "development",
+  "production",
+  "test"
+];
 
-if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) {
-  throw new Error("Error de configuración: PORT debe ser un puerto válido");
+const port = Number(process.env.PORT || 8080);
+const nodeEnv = process.env.NODE_ENV || "development";
+
+if (
+  !Number.isInteger(port) ||
+  port < 1 ||
+  port > 65535
+) {
+  throw new Error(
+    "Error de configuración: PORT debe ser un número entero entre 1 y 65535"
+  );
 }
+
+if (!allowedEnvironments.includes(nodeEnv)) {
+  throw new Error(
+    `Error de configuración: NODE_ENV inválido (${nodeEnv}). Valores permitidos: development, production, test`
+  );
+}
+
+const config = Object.freeze({
+  port,
+  mongodbUri: process.env.MONGODB_URI,
+  nodeEnv
+});
 
 export default config;

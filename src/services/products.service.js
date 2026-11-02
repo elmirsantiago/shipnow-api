@@ -1,5 +1,6 @@
 
 import productsRepository from "../repositories/products.repository.js";
+import { PRODUCT_STATUS } from "../utils/constants.js";
 
 const createError = (message, statusCode) => {
   const error = new Error(message);
@@ -34,13 +35,22 @@ class ProductsService {
       throw createError("Nombre y categoría son obligatorios", 400);
     }
 
-    if (typeof price !== "number" || !Number.isFinite(price) || price < 0) {
-      throw createError("El precio debe ser un número válido mayor o igual a cero", 400);
+    if (
+      typeof price !== "number" ||
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
+      throw createError("Precio inválido", 400);
     }
 
     if (!Number.isInteger(stock) || stock < 0) {
-      throw createError("El stock debe ser un número entero mayor o igual a cero", 400);
+      throw createError("Stock inválido", 400);
     }
+
+    const status =
+      stock > 0
+        ? PRODUCT_STATUS.AVAILABLE
+        : PRODUCT_STATUS.OUT_OF_STOCK;
 
     return productsRepository.create({
       name: name.trim(),
@@ -48,7 +58,7 @@ class ProductsService {
       price,
       stock,
       category: category.trim(),
-      isActive: true
+      status
     });
   }
 
@@ -58,8 +68,7 @@ class ProductsService {
       "description",
       "price",
       "stock",
-      "category",
-      "isActive"
+      "category"
     ];
 
     const updates = {};
@@ -71,21 +80,25 @@ class ProductsService {
     }
 
     if (Object.keys(updates).length === 0) {
-      throw createError("No se enviaron campos válidos para actualizar", 400);
+      throw createError(
+        "No se enviaron campos válidos para actualizar",
+        400
+      );
     }
 
     if (
       updates.name !== undefined &&
       (typeof updates.name !== "string" || !updates.name.trim())
     ) {
-      throw createError("El nombre no puede estar vacío", 400);
+      throw createError("Nombre inválido", 400);
     }
 
     if (
       updates.category !== undefined &&
-      (typeof updates.category !== "string" || !updates.category.trim())
+      (typeof updates.category !== "string" ||
+        !updates.category.trim())
     ) {
-      throw createError("La categoría no puede estar vacía", 400);
+      throw createError("Categoría inválida", 400);
     }
 
     if (
@@ -104,15 +117,20 @@ class ProductsService {
       throw createError("Stock inválido", 400);
     }
 
-    if (
-      updates.isActive !== undefined &&
-      typeof updates.isActive !== "boolean"
-    ) {
-      throw createError("isActive debe ser true o false", 400);
+    if (updates.name !== undefined) {
+      updates.name = updates.name.trim();
     }
 
-    if (updates.name !== undefined) updates.name = updates.name.trim();
-    if (updates.category !== undefined) updates.category = updates.category.trim();
+    if (updates.category !== undefined) {
+      updates.category = updates.category.trim();
+    }
+
+    if (updates.stock !== undefined) {
+      updates.status =
+        updates.stock > 0
+          ? PRODUCT_STATUS.AVAILABLE
+          : PRODUCT_STATUS.OUT_OF_STOCK;
+    }
 
     const product = await productsRepository.update(id, updates);
 

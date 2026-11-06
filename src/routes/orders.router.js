@@ -4,18 +4,19 @@ import ordersController from "../controllers/orders.controller.js";
 
 const router = Router();
 
-router.get("/", (req, res) => ordersController.getAll(req, res));
+// Obtener todos los pedidos
+router.get("/", ordersController.getAll);
 
-router.get("/:oid", (req, res) => ordersController.getById(req, res));
+// Obtener un pedido por ID
+router.get("/:oid", ordersController.getById);
 
-router.post("/", (req, res) => ordersController.create(req, res));
+// Crear un pedido
+router.post("/", ordersController.create);
 
-router.put("/:oid/status", (req, res) =>
-  ordersController.updateStatus(req, res)
-);
+// Actualizar el estado de un pedido
+router.put("/:oid/status", ordersController.updateStatus);
 
-router.delete("/:oid", (req, res) =>
-  ordersController.delete(req, res)
-);
+// Eliminar un pedido
+router.delete("/:oid", ordersController.delete);
 
 export default router;

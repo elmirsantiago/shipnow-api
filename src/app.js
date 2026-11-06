@@ -7,6 +7,10 @@ import ordersRouter from "./routes/orders.router.js";
 import productsRouter from "./routes/products.router.js";
 import mocksRouter from "./routes/mocks.router.js";
 
+// Manejo centralizado de errores - Módulo 3
+import AppError from "./errors/AppError.js";
+import errorHandler from "./middlewares/errorHandler.js";
+
 const app = express();
 
 app.use(express.json());
@@ -36,11 +40,12 @@ app.get("/", (req, res) => {
 });
 
 // Rutas no encontradas
-app.use((req, res) => {
-  res.status(404).json({
-    status: "error",
-    message: "Ruta no encontrada"
-  });
+app.use((req, res, next) => {
+  next(new AppError("ROUTE_NOT_FOUND"));
 });
+
+// Middleware global de errores
+// Siempre debe estar después de todas las rutas
+app.use(errorHandler);
 
 export default app;

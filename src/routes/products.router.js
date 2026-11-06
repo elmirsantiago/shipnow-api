@@ -4,14 +4,19 @@ import productsController from "../controllers/products.controller.js";
 
 const router = Router();
 
-router.get("/", (req, res) => productsController.getAll(req, res));
+// Obtener todos los productos
+router.get("/", productsController.getAll);
 
-router.get("/:pid", (req, res) => productsController.getById(req, res));
+// Obtener producto por ID
+router.get("/:pid", productsController.getById);
 
-router.post("/", (req, res) => productsController.create(req, res));
+// Crear producto
+router.post("/", productsController.create);
 
-router.put("/:pid", (req, res) => productsController.update(req, res));
+// Actualizar producto
+router.put("/:pid", productsController.update);
 
-router.delete("/:pid", (req, res) => productsController.delete(req, res));
+// Eliminar producto
+router.delete("/:pid", productsController.delete);
 
 export default router;

@@ -2,86 +2,71 @@
 import ordersService from "../services/orders.service.js";
 
 class OrdersController {
-  async getAll(req, res) {
+  async getAll(req, res, next) {
     try {
       const orders = await ordersService.getAllOrders();
 
-      res.json({
+      return res.json({
         status: "success",
         payload: orders
       });
     } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getById(req, res) {
+  async getById(req, res, next) {
     try {
       const order = await ordersService.getOrderById(req.params.oid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: order
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
       const order = await ordersService.createOrder(req.body);
 
-      res.status(201).json({
+      return res.status(201).json({
         status: "success",
         payload: order
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async updateStatus(req, res) {
+  async updateStatus(req, res, next) {
     try {
       const order = await ordersService.updateOrderStatus(
         req.params.oid,
-        req.body.status
+        req.body?.status
       );
 
-      res.json({
+      return res.json({
         status: "success",
         payload: order
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async delete(req, res) {
+  async delete(req, res, next) {
     try {
       const order = await ordersService.deleteOrder(req.params.oid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: order
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 }

@@ -2,55 +2,48 @@
 import mocksService from "../services/mocks.service.js";
 
 class MocksController {
-  handleError(res, error) {
-    return res.status(error.statusCode || 500).json({
-      status: "error",
-      message: error.message
-    });
-  }
-
-  async getUsers(req, res) {
+  async getMockUsers(req, res, next) {
     try {
       const users = await mocksService.getMockUsers(req.query.qty);
       return res.status(200).json(users);
     } catch (error) {
-      return this.handleError(res, error);
+      next(error);
     }
   }
 
-  async getCouriers(req, res) {
+  async getMockCouriers(req, res, next) {
     try {
       const couriers = await mocksService.getMockCouriers(req.query.qty);
       return res.status(200).json(couriers);
     } catch (error) {
-      return this.handleError(res, error);
+      next(error);
     }
   }
 
-  async getOrders(req, res) {
+  async getMockOrders(req, res, next) {
     try {
       const orders = await mocksService.getMockOrders(req.query.qty);
       return res.status(200).json(orders);
     } catch (error) {
-      return this.handleError(res, error);
+      next(error);
     }
   }
 
-  async getDeliveries(req, res) {
+  async getMockDeliveries(req, res, next) {
     try {
       const deliveries = await mocksService.getMockDeliveries(req.query.qty);
       return res.status(200).json(deliveries);
     } catch (error) {
-      return this.handleError(res, error);
+      next(error);
     }
   }
 
-  async seed(req, res) {
+  async seed(req, res, next) {
     try {
       const result = await mocksService.seed(req.query.qty);
       return res.status(201).json(result);
     } catch (error) {
-      return this.handleError(res, error);
+      next(error);
     }
   }
 }

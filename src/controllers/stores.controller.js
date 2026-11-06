@@ -2,86 +2,71 @@
 import storesService from "../services/stores.service.js";
 
 class StoresController {
-  async getAll(req, res) {
+  async getAll(req, res, next) {
     try {
       const stores = await storesService.getAllStores();
 
-      res.json({
+      return res.json({
         status: "success",
         payload: stores
       });
     } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getById(req, res) {
+  async getById(req, res, next) {
     try {
       const store = await storesService.getStoreById(req.params.sid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: store
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
       const store = await storesService.createStore(req.body);
 
-      res.status(201).json({
+      return res.status(201).json({
         status: "success",
         payload: store
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async update(req, res) {
+  async update(req, res, next) {
     try {
       const store = await storesService.updateStore(
         req.params.sid,
         req.body
       );
 
-      res.json({
+      return res.json({
         status: "success",
         payload: store
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async delete(req, res) {
+  async delete(req, res, next) {
     try {
       const store = await storesService.deleteStore(req.params.sid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: store
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 }

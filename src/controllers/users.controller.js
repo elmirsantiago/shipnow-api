@@ -2,86 +2,71 @@
 import usersService from "../services/users.service.js";
 
 class UsersController {
-  async getAll(req, res) {
+  async getAll(req, res, next) {
     try {
       const users = await usersService.getAllUsers();
 
-      res.json({
+      return res.json({
         status: "success",
         payload: users
       });
     } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getById(req, res) {
+  async getById(req, res, next) {
     try {
       const user = await usersService.getUserById(req.params.uid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: user
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
       const user = await usersService.createUser(req.body);
 
-      res.status(201).json({
+      return res.status(201).json({
         status: "success",
         payload: user
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async update(req, res) {
+  async update(req, res, next) {
     try {
       const user = await usersService.updateUser(
         req.params.uid,
         req.body
       );
 
-      res.json({
+      return res.json({
         status: "success",
         payload: user
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async delete(req, res) {
+  async delete(req, res, next) {
     try {
       const user = await usersService.deleteUser(req.params.uid);
 
-      res.json({
+      return res.json({
         status: "success",
         payload: user
       });
     } catch (error) {
-      res.status(error.statusCode || 400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 }

@@ -4,24 +4,31 @@ import mocksController from "../controllers/mocks.controller.js";
 
 const router = Router();
 
-router.get("/users", (req, res) =>
-  mocksController.getUsers(req, res)
+// Generación de datos ficticios
+router.get(
+  "/users",
+  mocksController.getMockUsers
 );
 
-router.get("/couriers", (req, res) =>
-  mocksController.getCouriers(req, res)
+router.get(
+  "/couriers",
+  mocksController.getMockCouriers
 );
 
-router.get("/orders", (req, res) =>
-  mocksController.getOrders(req, res)
+router.get(
+  "/orders",
+  mocksController.getMockOrders
 );
 
-router.get("/deliveries", (req, res) =>
-  mocksController.getDeliveries(req, res)
+router.get(
+  "/deliveries",
+  mocksController.getMockDeliveries
 );
 
-router.post("/seed", (req, res) =>
-  mocksController.seed(req, res)
+// Inserción de datos en MongoDB
+router.post(
+  "/seed",
+  mocksController.seed
 );
 
 export default router;

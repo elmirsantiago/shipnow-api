@@ -1,29 +1,41 @@
 
+import mongoose from "mongoose";
+
 import productsRepository from "../repositories/products.repository.js";
 import { PRODUCT_STATUS } from "../utils/constants.js";
-
-const createError = (message, statusCode) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+import AppError from "../errors/AppError.js";
 
 class ProductsService {
+  validateId(id) {
+    if (!mongoose.isValidObjectId(id)) {
+      throw new AppError(
+        "INVALID_DATA",
+        "El ID del producto no es válido"
+      );
+    }
+  }
+
   async getAllProducts() {
     return productsRepository.getAll();
   }
 
   async getProductById(id) {
+    this.validateId(id);
+
     const product = await productsRepository.getById(id);
 
     if (!product) {
-      throw createError("Producto no encontrado", 404);
+      throw new AppError("PRODUCT_NOT_FOUND");
     }
 
     return product;
   }
 
   async createProduct(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new AppError("INVALID_DATA");
+    }
+
     const { name, description, price, stock, category } = data;
 
     if (
@@ -32,7 +44,10 @@ class ProductsService {
       typeof category !== "string" ||
       !category.trim()
     ) {
-      throw createError("Nombre y categoría son obligatorios", 400);
+      throw new AppError(
+        "INVALID_DATA",
+        "Nombre y categoría son obligatorios"
+      );
     }
 
     if (
@@ -40,11 +55,21 @@ class ProductsService {
       !Number.isFinite(price) ||
       price < 0
     ) {
-      throw createError("Precio inválido", 400);
+      throw new AppError("INVALID_DATA", "Precio inválido");
     }
 
     if (!Number.isInteger(stock) || stock < 0) {
-      throw createError("Stock inválido", 400);
+      throw new AppError("INVALID_DATA", "Stock inválido");
+    }
+
+    if (
+      description !== undefined &&
+      typeof description !== "string"
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "La descripción debe ser un texto"
+      );
     }
 
     const status =
@@ -63,6 +88,12 @@ class ProductsService {
   }
 
   async updateProduct(id, data) {
+    this.validateId(id);
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new AppError("INVALID_DATA");
+    }
+
     const allowedFields = [
       "name",
       "description",
@@ -80,9 +111,9 @@ class ProductsService {
     }
 
     if (Object.keys(updates).length === 0) {
-      throw createError(
-        "No se enviaron campos válidos para actualizar",
-        400
+      throw new AppError(
+        "INVALID_DATA",
+        "No se enviaron campos válidos para actualizar"
       );
     }
 
@@ -90,31 +121,45 @@ class ProductsService {
       updates.name !== undefined &&
       (typeof updates.name !== "string" || !updates.name.trim())
     ) {
-      throw createError("Nombre inválido", 400);
+      throw new AppError("INVALID_DATA", "Nombre inválido");
     }
 
     if (
       updates.category !== undefined &&
-      (typeof updates.category !== "string" ||
-        !updates.category.trim())
+      (
+        typeof updates.category !== "string" ||
+        !updates.category.trim()
+      )
     ) {
-      throw createError("Categoría inválida", 400);
+      throw new AppError("INVALID_DATA", "Categoría inválida");
+    }
+
+    if (
+      updates.description !== undefined &&
+      typeof updates.description !== "string"
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "Descripción inválida"
+      );
     }
 
     if (
       updates.price !== undefined &&
-      (typeof updates.price !== "number" ||
+      (
+        typeof updates.price !== "number" ||
         !Number.isFinite(updates.price) ||
-        updates.price < 0)
+        updates.price < 0
+      )
     ) {
-      throw createError("Precio inválido", 400);
+      throw new AppError("INVALID_DATA", "Precio inválido");
     }
 
     if (
       updates.stock !== undefined &&
       (!Number.isInteger(updates.stock) || updates.stock < 0)
     ) {
-      throw createError("Stock inválido", 400);
+      throw new AppError("INVALID_DATA", "Stock inválido");
     }
 
     if (updates.name !== undefined) {
@@ -135,17 +180,19 @@ class ProductsService {
     const product = await productsRepository.update(id, updates);
 
     if (!product) {
-      throw createError("Producto no encontrado", 404);
+      throw new AppError("PRODUCT_NOT_FOUND");
     }
 
     return product;
   }
 
   async deleteProduct(id) {
+    this.validateId(id);
+
     const product = await productsRepository.delete(id);
 
     if (!product) {
-      throw createError("Producto no encontrado", 404);
+      throw new AppError("PRODUCT_NOT_FOUND");
     }
 
     return product;

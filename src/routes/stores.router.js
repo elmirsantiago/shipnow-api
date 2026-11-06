@@ -4,14 +4,19 @@ import storesController from "../controllers/stores.controller.js";
 
 const router = Router();
 
-router.get("/", (req, res) => storesController.getAll(req, res));
+// Obtener todos los comercios
+router.get("/", storesController.getAll);
 
-router.get("/:sid", (req, res) => storesController.getById(req, res));
+// Obtener comercio por ID
+router.get("/:sid", storesController.getById);
 
-router.post("/", (req, res) => storesController.create(req, res));
+// Crear comercio
+router.post("/", storesController.create);
 
-router.put("/:sid", (req, res) => storesController.update(req, res));
+// Actualizar comercio
+router.put("/:sid", storesController.update);
 
-router.delete("/:sid", (req, res) => storesController.delete(req, res));
+// Eliminar comercio
+router.delete("/:sid", storesController.delete);
 
 export default router;

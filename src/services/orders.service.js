@@ -7,6 +7,7 @@ import storesRepository from "../repositories/stores.repository.js";
 
 import { ORDER_STATUS, ORDER_PRIORITY } from "../utils/constants.js";
 import AppError from "../errors/AppError.js";
+import logger from "../config/logger.js";
 
 class OrdersService {
   validateId(id, field = "pedido") {
@@ -28,6 +29,10 @@ class OrdersService {
     const order = await ordersRepository.getById(id);
 
     if (!order) {
+      logger.warning(
+        `Intento de consultar un pedido inexistente: ${id}`
+      );
+
       throw new AppError("ORDER_NOT_FOUND");
     }
 
@@ -122,7 +127,7 @@ class OrdersService {
       0
     );
 
-    return ordersRepository.create({
+    const order = await ordersRepository.create({
       customer,
       store,
       items,
@@ -131,6 +136,12 @@ class OrdersService {
       total,
       status: ORDER_STATUS.CREATED
     });
+
+    logger.info(
+      `Pedido creado correctamente: ${order._id}`
+    );
+
+    return order;
   }
 
   async updateOrderStatus(id, status) {
@@ -143,8 +154,16 @@ class OrdersService {
     const order = await ordersRepository.updateStatus(id, status);
 
     if (!order) {
+      logger.warning(
+        `Intento de actualizar un pedido inexistente: ${id}`
+      );
+
       throw new AppError("ORDER_NOT_FOUND");
     }
+
+    logger.info(
+      `Estado del pedido ${id} actualizado a: ${status}`
+    );
 
     return order;
   }
@@ -155,8 +174,16 @@ class OrdersService {
     const order = await ordersRepository.delete(id);
 
     if (!order) {
+      logger.warning(
+        `Intento de eliminar un pedido inexistente: ${id}`
+      );
+
       throw new AppError("ORDER_NOT_FOUND");
     }
+
+    logger.info(
+      `Pedido eliminado correctamente: ${id}`
+    );
 
     return order;
   }

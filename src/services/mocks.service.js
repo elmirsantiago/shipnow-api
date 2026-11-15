@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 
 import mocksRepository from "../repositories/mocks.repository.js";
 import AppError from "../errors/AppError.js";
+import logger from "../config/logger.js";
 
 import {
   generateMockUsers,
@@ -17,6 +18,10 @@ class MocksService {
     const qty = Number(value ?? 10);
 
     if (!Number.isInteger(qty) || qty < 1 || qty > 100) {
+      logger.warning(
+        `Cantidad inválida solicitada para mocks: ${String(value)}`
+      );
+
       throw new AppError("INVALID_MOCK_QUANTITY");
     }
 
@@ -24,11 +29,27 @@ class MocksService {
   }
 
   async getMockUsers(qty) {
-    return generateMockUsers(this.validateQty(qty));
+    const quantity = this.validateQty(qty);
+
+    const users = generateMockUsers(quantity);
+
+    logger.info(
+      `Se generaron ${quantity} usuarios mock correctamente`
+    );
+
+    return users;
   }
 
   async getMockCouriers(qty) {
-    return generateMockCouriers(this.validateQty(qty));
+    const quantity = this.validateQty(qty);
+
+    const couriers = generateMockCouriers(quantity);
+
+    logger.info(
+      `Se generaron ${quantity} repartidores mock correctamente`
+    );
+
+    return couriers;
   }
 
   async getMockOrders(qty) {
@@ -44,7 +65,17 @@ class MocksService {
       () => ({ _id: faker.database.mongodbObjectId() })
     );
 
-    return generateMockOrders(quantity, customers, stores);
+    const orders = generateMockOrders(
+      quantity,
+      customers,
+      stores
+    );
+
+    logger.info(
+      `Se generaron ${quantity} pedidos mock correctamente`
+    );
+
+    return orders;
   }
 
   async getMockDeliveries(qty) {
@@ -60,16 +91,34 @@ class MocksService {
       () => ({ _id: faker.database.mongodbObjectId() })
     );
 
-    return generateMockDeliveries(quantity, orders, couriers);
+    const deliveries = generateMockDeliveries(
+      quantity,
+      orders,
+      couriers
+    );
+
+    logger.info(
+      `Se generaron ${quantity} entregas mock correctamente`
+    );
+
+    return deliveries;
   }
 
   async seed(qty) {
     const quantity = this.validateQty(qty);
 
+    logger.info(
+      `Iniciando inserción de datos mock: ${quantity} registros por entidad`
+    );
+
     try {
       const stores = await mocksRepository.getActiveStores();
 
       if (stores.length === 0) {
+        logger.warning(
+          "No hay tiendas activas disponibles para generar datos mock"
+        );
+
         throw new AppError("NO_ACTIVE_STORES");
       }
 
@@ -90,8 +139,13 @@ class MocksService {
         password: passwordHash
       }));
 
-      const createdCustomers = await mocksRepository.createUsers(customers);
-      const createdCouriers = await mocksRepository.createUsers(couriers);
+      const createdCustomers = await mocksRepository.createUsers(
+        customers
+      );
+
+      const createdCouriers = await mocksRepository.createUsers(
+        couriers
+      );
 
       const orders = generateMockOrders(
         quantity,
@@ -99,7 +153,9 @@ class MocksService {
         stores
       );
 
-      const createdOrders = await mocksRepository.createOrders(orders);
+      const createdOrders = await mocksRepository.createOrders(
+        orders
+      );
 
       const deliveries = generateMockDeliveries(
         quantity,
@@ -107,8 +163,15 @@ class MocksService {
         createdCouriers
       );
 
-      const createdDeliveries = await mocksRepository.createDeliveries(
-        deliveries
+      const createdDeliveries =
+        await mocksRepository.createDeliveries(deliveries);
+
+      logger.info(
+        `Datos mock insertados correctamente: ` +
+        `${createdCustomers.length} usuarios, ` +
+        `${createdCouriers.length} repartidores, ` +
+        `${createdOrders.length} pedidos y ` +
+        `${createdDeliveries.length} entregas`
       );
 
       return {
@@ -125,7 +188,9 @@ class MocksService {
         throw error;
       }
 
-      console.error("Error al insertar datos de prueba:", error);
+      logger.error(
+        `Error al insertar datos de prueba: ${error.stack || error.message}`
+      );
 
       throw new AppError("DATABASE_ERROR");
     }

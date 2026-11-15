@@ -3,10 +3,21 @@ import mongoose from "mongoose";
 
 import AppError from "../errors/AppError.js";
 import { ERROR_DICTIONARY } from "../errors/errorDictionary.js";
+import logger from "../config/logger.js";
 
 const errorHandler = (err, req, res, next) => {
+  const requestInfo = `${req.method} ${req.originalUrl}`;
+
   // 1. Errores personalizados de ShipNow
   if (err instanceof AppError) {
+    const logMessage = `${requestInfo} - ${err.code}: ${err.message}`;
+
+    if (err.statusCode >= 500) {
+      logger.error(logMessage);
+    } else {
+      logger.warning(logMessage);
+    }
+
     return res.status(err.statusCode).json({
       status: "error",
       code: err.code,
@@ -17,6 +28,10 @@ const errorHandler = (err, req, res, next) => {
   // 2. Errores de validación de Mongoose
   if (err instanceof mongoose.Error.ValidationError) {
     const error = ERROR_DICTIONARY.INVALID_DATA;
+
+    logger.warning(
+      `${requestInfo} - Error de validación: ${err.message}`
+    );
 
     return res.status(error.statusCode).json({
       status: "error",
@@ -29,6 +44,10 @@ const errorHandler = (err, req, res, next) => {
   if (err instanceof mongoose.Error.CastError) {
     const error = ERROR_DICTIONARY.INVALID_DATA;
 
+    logger.warning(
+      `${requestInfo} - Valor inválido: ${err.message}`
+    );
+
     return res.status(error.statusCode).json({
       status: "error",
       code: error.code,
@@ -39,6 +58,10 @@ const errorHandler = (err, req, res, next) => {
   // 4. Datos duplicados en MongoDB
   if (err.code === 11000) {
     const error = ERROR_DICTIONARY.DUPLICATE_DATA;
+
+    logger.warning(
+      `${requestInfo} - Intento de registrar datos duplicados`
+    );
 
     return res.status(error.statusCode).json({
       status: "error",
@@ -55,6 +78,10 @@ const errorHandler = (err, req, res, next) => {
   ) {
     const error = ERROR_DICTIONARY.INVALID_DATA;
 
+    logger.warning(
+      `${requestInfo} - La petición contiene un JSON inválido`
+    );
+
     return res.status(error.statusCode).json({
       status: "error",
       code: error.code,
@@ -68,7 +95,9 @@ const errorHandler = (err, req, res, next) => {
     err.name === "MongoServerError" ||
     err.name === "MongoNetworkError"
   ) {
-    console.error("Error de base de datos:", err);
+    logger.error(
+      `${requestInfo} - Error de base de datos: ${err.message}`
+    );
 
     const error = ERROR_DICTIONARY.DATABASE_ERROR;
 
@@ -80,7 +109,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // 7. Errores inesperados
-  console.error("Error inesperado:", err);
+  logger.error(
+    `${requestInfo} - Error inesperado: ${err.stack || err.message}`
+  );
 
   const error = ERROR_DICTIONARY.INTERNAL_ERROR;
 

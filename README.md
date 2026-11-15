@@ -8,6 +8,8 @@ En la Pre-entrega del Módulo 1, se implementó una arquitectura profesional bas
 En la Pre-entrega del Módulo 2, se incorporó un sistema de mocking y carga de datos de prueba, capaz de generar usuarios, repartidores, pedidos y entregas ficticias, tanto para previsualización como para inserción controlada en MongoDB.
 
 En la Pre-entrega del Módulo 3, se incorporó un manejo centralizado de errores mediante errores de dominio personalizados, un diccionario común, un middleware global y pruebas automatizadas.
+
+En la Pre-entrega del Módulo 4, se integró Winston para logging centralizado, persistencia y rotación de archivos, diferenciación por entorno y un endpoint de prueba.
 🛠️ Tecnologías utilizadas
 - Node.js: entorno de ejecución de JavaScript.
 - Express: framework para desarrollar la API REST.
@@ -19,6 +21,8 @@ En la Pre-entrega del Módulo 3, se incorporó un manejo centralizado de errores
 - Nodemon: reinicio automático del servidor durante el desarrollo.
 - Jest: ejecución de pruebas automatizadas.
 - Supertest: pruebas HTTP de endpoints Express.
+- Winston: logging centralizado con niveles personalizados.
+- winston-daily-rotate-file: rotación y retención de archivos de logs.
 🏗️ Arquitectura del proyecto
 La aplicación utiliza la siguiente arquitectura:
 
@@ -28,29 +32,28 @@ Routes
 - Definen los endpoints disponibles.
 - Conectan cada ruta con su Controller.
 - No contienen lógica de negocio.
-Controllers
+  Controllers
 - Reciben las peticiones HTTP.
 - Obtienen parámetros y datos del request.
 - Invocan los métodos del Service.
 - Devuelven respuestas JSON y códigos HTTP de éxito.
 - Propagan los errores mediante next(error) al middleware global.
-Services
+  Services
 - Implementan reglas de negocio.
 - Validan los datos recibidos y lanzan AppError ante errores de dominio.
 - Coordinan las operaciones y las relaciones entre entidades.
-Repositories
+  Repositories
 - Encapsulan las operaciones de MongoDB mediante Mongoose.
 - Implementan consultas, filtros e inserciones.
-Models
+  Models
 - Definen los esquemas y validaciones de Mongoose.
-Utils
+  Utils
 - Centraliza las constantes y los generadores de datos ficticios.
-Errors y middlewares
+  Errors y middlewares
 - AppError representa errores personalizados de dominio.
 - errorDictionary.js define códigos, estados HTTP y mensajes.
 - errorHandler.js transforma los errores en respuestas HTTP consistentes.
 📁 Estructura del proyecto
-
 src/
 
 ├── config/
@@ -134,20 +137,18 @@ src/
 
 └── server.js
 
+logs/  (generada automáticamente; ignorada por Git)
+tests/
+└── logger.test.js  (además de las pruebas de módulos anteriores)
 ⚙️ Instalación y configuración
 1. Clonar el repositorio
-
 git clone https://github.com/elmirsantiago/shipnow-api.git
 
 cd shipnow-api
-
 2. Instalar dependencias
-
 npm install
-
 3. Configurar variables de entorno
-Crear un archivo .env en la raíz del proyecto, tomando como referencia .env.example.
-
+   Crear un archivo .env en la raíz del proyecto, tomando como referencia .env.example.
 Ejemplo:
 
 PORT=8080
@@ -160,8 +161,7 @@ La configuración se centraliza en src/config/index.js.
 - MONGODB_URI es obligatoria.
 - PORT debe ser un entero entre 1 y 65535.
 - NODE_ENV admite development, production y test.
-Si la configuración es inválida, la aplicación muestra un error descriptivo y no inicia.
-
+  Si la configuración es inválida, la aplicación muestra un error descriptivo y no inicia.
 El archivo .env está excluido de Git mediante .gitignore.
 4. Iniciar MongoDB
 Verificar que el servicio de MongoDB esté funcionando.
@@ -189,7 +189,6 @@ Respuesta esperada:
   "message": "ShipNow API funcionando correctamente"
 
 }
-
 👤 Usuarios (Users)
 | Método | Endpoint | Descripción |
 
@@ -225,9 +224,8 @@ Reglas de negocio
 - Los usuarios creados mediante el endpoint general reciben el rol customer.
 - Las actualizaciones generales se limitan a nombre y apellido.
 - Los roles se centralizan mediante USER_ROLES.
-Roles disponibles
-| Constante | Valor |
-
+  Roles disponibles
+  | Constante | Valor |
 |---|---|
 
 | ADMIN | admin |
@@ -276,7 +274,7 @@ Reglas de negocio
 - Los productos con stock positivo tienen estado available.
 - Los productos sin stock tienen estado out_of_stock.
 - El listado general devuelve únicamente productos disponibles.
-Los estados se definen mediante PRODUCT_STATUS.
+  Los estados se definen mediante PRODUCT_STATUS.
 🏪 Comercios (Stores)
 | Método | Endpoint | Descripción |
 
@@ -359,10 +357,10 @@ Reglas de negocio
 - El total se calcula a partir de los productos.
 - Los estados se definen mediante ORDER_STATUS.
 - Las prioridades se definen mediante ORDER_PRIORITY.
-Estados permitidos
-created, assigned, picked_up, in_transit, delivered, cancelled.
-Prioridades permitidas
-low, normal, high.
+  Estados permitidos
+  created, assigned, picked_up, in_transit, delivered, cancelled.
+  Prioridades permitidas
+  low, normal, high.
 🧪 Mocking y datos de prueba — Módulo 2
 Se incorporó un módulo de mocking bajo /api/mocks, que permite generar datos simulados sin cargarlos manualmente.
 
@@ -374,9 +372,8 @@ La lógica está separada en:
 - mocks.service.js: validaciones y coordinación de operaciones.
 - mocks.repository.js: operaciones con MongoDB.
 - mocks.generator.js: generación de objetos ficticios.
-Endpoints disponibles
-| Método | Endpoint | Descripción | Guarda en MongoDB |
-
+  Endpoints disponibles
+  | Método | Endpoint | Descripción | Guarda en MongoDB |
 |---|---|---|---|
 
 | GET | /api/mocks/users?qty=5 | Genera clientes ficticios | No |
@@ -394,8 +391,7 @@ El parámetro qty determina cuántos registros se generan.
 - Valor mínimo: 1.
 - Valor máximo: 100.
 - Solamente acepta números enteros.
-Ejemplo:
-
+  Ejemplo:
 GET http://localhost:8080/api/mocks/users?qty=3
 
 Si se envía un valor inválido, la API responde con código 400.
@@ -450,36 +446,28 @@ Los pedidos generados incluyen:
 - Total calculado.
 - Estado permitido.
 - Prioridad permitida.
-Los identificadores de este endpoint son simulados y no necesariamente corresponden a documentos existentes en MongoDB.
-Generar entregas ficticias
-GET /api/mocks/deliveries?qty=2
-
+  Los identificadores de este endpoint son simulados y no necesariamente corresponden a documentos existentes en MongoDB.
+  Generar entregas ficticias
+  GET /api/mocks/deliveries?qty=2
 Las entregas incluyen:
 - Identificador ficticio de pedido.
 - Identificador ficticio de repartidor.
 - Estado de entrega.
 - Fecha de asignación.
 - Fecha de finalización, cuando corresponda.
-Estos datos tampoco se guardan en MongoDB.
-Insertar datos de prueba en MongoDB
-POST /api/mocks/seed?qty=2
-
+  Estos datos tampoco se guardan en MongoDB.
+  Insertar datos de prueba en MongoDB
+  POST /api/mocks/seed?qty=2
 Este endpoint crea datos relacionados en la base de datos configurada.
 
 Requisito previo: debe existir al menos un comercio activo en MongoDB.
 
 Para ejecutar la carga:
-
 1. Iniciar MongoDB y el servidor.
-
 2. Abrir Thunder Client o Postman.
-
 3. Seleccionar el método POST.
-
 4. Utilizar http://localhost:8080/api/mocks/seed?qty=2.
-
 5. Enviar la petición sin cuerpo JSON.
-
 Ejemplo de respuesta:
 
 {
@@ -505,8 +493,7 @@ Con qty=2, se insertan ocho documentos:
 - 2 repartidores en users.
 - 2 pedidos en orders.
 - 2 entregas en deliveries.
-Las contraseñas de los usuarios ficticios se almacenan utilizando bcrypt.
-
+  Las contraseñas de los usuarios ficticios se almacenan utilizando bcrypt.
 Los correos de los usuarios insertados utilizan identificadores únicos para evitar colisiones.
 
 Importante: cada ejecución del endpoint inserta nuevos registros. No debe ejecutarse repetidamente sin necesidad.
@@ -539,14 +526,13 @@ En el flujo actual de generación:
 - Cada entrega tiene un repartidor asignado.
 - La fecha assignedAt se registra automáticamente.
 - La fecha deliveredAt permanece en null.
-De esta forma, los estados de los pedidos y las entregas generados por el seed son coherentes.
-Comprobar los registros insertados
-Abrir MongoDB Compass y revisar las colecciones:
+  De esta forma, los estados de los pedidos y las entregas generados por el seed son coherentes.
+  Comprobar los registros insertados
+  Abrir MongoDB Compass y revisar las colecciones:
 - users
 - orders
 - deliveries
-Para verificar las relaciones, comparar los identificadores de los documentos.
-
+  Para verificar las relaciones, comparar los identificadores de los documentos.
 Ejemplo de filtro en MongoDB Compass:
 
 { "_id": ObjectId("ID_DEL_DOCUMENTO") }
@@ -555,7 +541,7 @@ Comprobar que:
 - El customer de un pedido corresponde a un usuario con rol customer.
 - El courier de una entrega corresponde a un usuario con rol courier.
 - El order de una entrega corresponde a un pedido existente.
-Limitaciones actuales
+  Limitaciones actuales
 - El seed utiliza comercios activos previamente cargados.
 - Los endpoints GET de pedidos y entregas generan referencias ficticias, no documentos persistidos.
 - El seed no utiliza una transacción de MongoDB: si una inserción falla, podrían quedar registros parciales.
@@ -568,7 +554,7 @@ Módulo 1
 - Validación de estados de productos.
 - Validación de variables de entorno.
 - Comprobación del hash de contraseñas.
-Módulo 2
+  Módulo 2
 - Generación de cinco usuarios ficticios.
 - Generación de cinco repartidores ficticios.
 - Generación de cinco pedidos ficticios.
@@ -585,9 +571,9 @@ Flujo: Router → Controller → Service → AppError → errorHandler → respu
 Estructura uniforme
 Las respuestas de error utilizan los campos status, code y message:
 {
-  "status": "error",
-  "code": "PRODUCT_NOT_FOUND",
-  "message": "Producto no encontrado"
+"status": "error",
+"code": "PRODUCT_NOT_FOUND",
+"message": "Producto no encontrado"
 }
 Los errores no controlados no exponen trazas ni detalles internos al cliente; se registran en el servidor y se devuelve un mensaje genérico.
 Diccionario de errores
@@ -605,28 +591,27 @@ DATABASE_ERROR	500	Falla reconocida de base de datos
 ROUTE_NOT_FOUND	404	Endpoint inexistente
 INTERNAL_ERROR	500	Error inesperado
 
-
 El diccionario está definido en src/errors/errorDictionary.js. La clase src/errors/AppError.js permite lanzar un error por su tipo y, cuando corresponde, personalizar el mensaje.
 Ejemplos para probar en Thunder Client o Postman
 ID de producto inválido
 
 GET /api/products/123 → HTTP 400
 {
-  "status": "error",
-  "code": "INVALID_DATA",
-  "message": "El ID del producto no es válido"
+"status": "error",
+"code": "INVALID_DATA",
+"message": "El ID del producto no es válido"
 }
 Estado de pedido inválido
 
 PUT /api/orders/507f1f77bcf86cd799439011/status
 {
-  "status": "volando"
+"status": "volando"
 }
 Respuesta HTTP 400:
 {
-  "status": "error",
-  "code": "INVALID_ORDER_STATUS",
-  "message": "Estado de pedido inválido"
+"status": "error",
+"code": "INVALID_ORDER_STATUS",
+"message": "Estado de pedido inválido"
 }
 Cantidad de mocks inválida
 
@@ -639,18 +624,75 @@ Errores de MongoDB y Mongoose
 El middleware también contempla errores de validación (ValidationError), conversión (CastError), claves duplicadas (11000), JSON mal formado y errores reconocidos de conexión u operación de MongoDB. Las respuestas preservan el mismo formato JSON y no muestran mensajes técnicos internos.
 
 Nota: el seed captura fallas no controladas durante la inserción y las transforma en DATABASE_ERROR. Como no utiliza transacciones, una falla puede dejar inserciones parciales; se recomienda usar una base de pruebas.
+📊 Logging y monitoreo básico — Módulo 4
+ShipNow utiliza Winston como logger centralizado en src/config/logger.js. Reemplaza las llamadas directas a console.log() y console.error() de src y registra eventos relevantes sin cambiar el formato de las respuestas HTTP de la API.
+Niveles personalizados
+Nivel	Prioridad	Uso
+fatal	0	Fallas críticas, como problemas de arranque o conexión inicial
+error	1	Fallas inesperadas o de base de datos
+warning	2	Validaciones fallidas, rutas inexistentes y otros eventos esperados
+info	3	Conexión exitosa, inicio del servidor y operaciones exitosas
+http	4	Eventos HTTP de diagnóstico y prueba
+debug	5	Información detallada de desarrollo
+
+
+Los números más bajos representan mayor gravedad.
+Diferencias entre entornos
+- Desarrollo (NODE_ENV=development): umbral debug; se admiten los seis niveles en consola y en el archivo combinado.
+- Producción (NODE_ENV=production): umbral info; se registran info, warning, error y fatal, pero no http ni debug.
+- El endpoint de prueba se registra únicamente cuando NODE_ENV es distinto de production. Para usarlo, se recomienda configurar explícitamente NODE_ENV=development.
+Integración en la aplicación
+- src/server.js: inicio exitoso (info) y fallas críticas de arranque (fatal).
+- src/config/db.js: conexión a MongoDB (info) y fallas iniciales (fatal).
+- src/middlewares/errorHandler.js: errores de negocio (warning) y errores del servidor (error).
+- src/services/mocks.service.js: generación e inserción de datos de prueba (info), cantidades inválidas (warning) y fallas de inserción (error).
+- src/services/orders.service.js: creación, actualización y eliminación de pedidos (info) e intentos de operar sobre pedidos inexistentes (warning).
+Endpoint de prueba
+GET /api/loggerTest — disponible solamente fuera de producción.
+
+Con el servidor en desarrollo:
+npm run dev
+Abrir http://localhost:8080/api/loggerTest o consultar la ruta mediante Thunder Client/Postman. El endpoint emite un registro en cada nivel (debug, http, info, warning, error, fatal) y responde:
+{
+  "status": "success",
+  "message": "Prueba de logging ejecutada correctamente",
+  "levels": ["debug", "http", "info", "warning", "error", "fatal"]
+}
+Las entradas error y fatal generadas por este endpoint son intencionales: no indican que el servidor haya fallado. En producción la ruta no existe y el middleware global responde con un 404 ROUTE_NOT_FOUND.
+Persistencia y rotación
+Los archivos se crean automáticamente dentro de logs/:
+Archivo	Contenido	Rotación	Retención
+logs/error-AAAA-MM-DD.log	Solo error y fatal	Diaria o al alcanzar 10 MB	14 días
+logs/combined-AAAA-MM-DD.log	Niveles permitidos según el entorno	Diaria o al alcanzar 10 MB	7 días
+
+
+El formato de cada registro es AAAA-MM-DD HH:mm:ss [nivel] mensaje.
+
+El transporte de errores utiliza un filtro explícito que deja pasar únicamente error y fatal. Los archivos de auditoría internos de la rotación también se generan en logs/.
+
+En .gitignore debe figurar:
+.env
+logs/
+De esta manera no se publican secretos ni archivos de logs generados. La carpeta puede documentarse, pero sus archivos no deben subirse al repositorio.
+Verificación
+1. Ejecutar npm run dev y visitar http://localhost:8080/api/loggerTest.
+2. Confirmar que la consola muestra los seis niveles con fecha y hora.
+3. Revisar logs/error-AAAA-MM-DD.log: debe contener únicamente entradas error y fatal.
+4. Revisar logs/combined-AAAA-MM-DD.log para ver los niveles admitidos por el entorno.
+5. Ejecutar npm test para verificar la suite automatizada.
+La rotación está configurada por fecha y tamaño; las pruebas realizadas hasta el momento verificaron la creación y el filtrado de archivos, no una rotación forzada por superar 10 MB o cambiar de fecha.
 ✅ Pruebas automatizadas — Jest y Supertest
 Para ejecutar las pruebas desde la raíz del proyecto:
 npm install
 npm test
-Resultado confirmado durante el desarrollo: 21 tests aprobados en 4 suites.
+Resultado confirmado durante el desarrollo: 25 tests aprobados en 5 suites.
 Archivo	Pruebas	Cobertura
 tests/mocks.test.js	6	Generación de mocks y validación de cantidades
 tests/mocks.seed.test.js	3	Seed, relaciones y ausencia de comercios activos
 tests/errors.test.js	8	Errores HTTP, rutas inexistentes, IDs, estados, precios, mocks y JSON inválido
 tests/errorHandler.test.js	4	Errores duplicados, validación, conversión y fallas de MongoDB
-Total	21	4 suites
-
+tests/logger.test.js	4	Endpoint, seis niveles, configuración y transportes de Winston
+Total	25	5 suites
 
 Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan errores para verificar sus respuestas sin provocar fallas reales en MongoDB. Los resultados corresponden a la ejecución local reportada durante la preparación de esta entrega.
 🔐 Seguridad y buenas prácticas
@@ -671,8 +713,8 @@ Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan 
 📚 Entrega
 Proyecto: ShipNow API  
 
-Pre-entregas: Módulos 1, 2 y 3  
+Pre-entregas: Módulos 1, 2, 3 y 4  
 
 Repositorio: https://github.com/elmirsantiago/shipnow-api
 
-El proyecto implementa una API REST con arquitectura por capas, un módulo de mocking para generar y persistir datos de prueba relacionados, y un sistema centralizado de errores de dominio y base de datos, verificado mediante pruebas automatizadas
+El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores y logging profesional con Winston, verificado mediante 25 pruebas automatizadas.

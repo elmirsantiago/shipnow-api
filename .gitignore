@@ -4,3 +4,5 @@ logs
 uploads
 coverage
 npm-debug.log
+# Archivos de logging
+logs/

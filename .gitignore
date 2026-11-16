@@ -1,8 +1,22 @@
-node_modules
+# Dependencias
+node_modules/
+
+# Variables de entorno
 .env
-logs
-uploads
-coverage
-npm-debug.log
+.env.*
+!.env.example
+!.env.test.example
+
 # Archivos de logging
 logs/
+*.log
+
+# Archivos subidos
+uploads/
+
+# Reportes de cobertura
+coverage/
+
+# Archivos temporales
+.DS_Store
+Thumbs.db

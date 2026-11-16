@@ -12,6 +12,8 @@ En la Pre-entrega del Módulo 3, se incorporó un manejo centralizado de errores
 En la Pre-entrega del Módulo 4, se integró Winston para logging centralizado, persistencia y rotación de archivos, diferenciación por entorno y un endpoint de prueba.
 
 En la Pre-entrega del Módulo 5, se incorporó documentación interactiva mediante Swagger UI y OpenAPI 3.0.3, con 16 operaciones HTTP documentadas, cinco grupos temáticos y schemas reutilizables.
+
+En la Pre-entrega del Módulo 6, se incorporaron tests funcionales con Mocha, Chai y Supertest, utilizando una base de datos local exclusiva para testing y limpieza controlada. Se verificaron 24 tests funcionales y se conservaron 25 tests de Jest: 49 pruebas aprobadas en total.
 🛠️ Tecnologías utilizadas
 - Node.js: entorno de ejecución de JavaScript.
 - Express: framework para desarrollar la API REST.
@@ -21,7 +23,9 @@ En la Pre-entrega del Módulo 5, se incorporó documentación interactiva median
 - bcrypt: hash de contraseñas.
 - @faker-js/faker: generación de datos ficticios.
 - Nodemon: reinicio automático del servidor durante el desarrollo.
-- Jest: ejecución de pruebas automatizadas.
+- Jest: ejecución de pruebas automatizadas previas.
+- Mocha: ejecución de tests funcionales.
+- Chai: aserciones y validación de respuestas.
 - Supertest: pruebas HTTP de endpoints Express.
 - Winston: logging centralizado con niveles personalizados.
 - winston-daily-rotate-file: rotación y retención de archivos de logs.
@@ -151,15 +155,25 @@ src/
 logs/  (generada automáticamente; ignorada por Git)
 tests/
 └── logger.test.js  (además de las pruebas de módulos anteriores)
+
+test/
+└── functional/
+├── helpers/
+│   └── testDatabase.js
+├── users.test.js
+├── orders.test.js
+├── api.test.js
+└── seed.test.js
+
+.env.test  (local, excluido de Git)
 ⚙️ Instalación y configuración
 1. Clonar el repositorio
-git clone https://github.com/elmirsantiago/shipnow-api.git
-
+   git clone https://github.com/elmirsantiago/shipnow-api.git
 cd shipnow-api
 2. Instalar dependencias
 npm install
 3. Configurar variables de entorno
-   Crear un archivo .env en la raíz del proyecto, tomando como referencia .env.example.
+Crear un archivo .env en la raíz del proyecto, tomando como referencia .env.example.
 Ejemplo:
 
 PORT=8080
@@ -173,12 +187,11 @@ La configuración se centraliza en src/config/index.js.
 - PORT debe ser un entero entre 1 y 65535.
 - NODE_ENV admite development, production y test.
   Si la configuración es inválida, la aplicación muestra un error descriptivo y no inicia.
-El archivo .env está excluido de Git mediante .gitignore.
+  El archivo .env está excluido de Git mediante .gitignore.
 4. Iniciar MongoDB
-Verificar que el servicio de MongoDB esté funcionando.
+   Verificar que el servicio de MongoDB esté funcionando.
 5. Ejecutar la aplicación
-Modo desarrollo:
-
+   Modo desarrollo:
 npm run dev
 
 Modo normal:
@@ -235,10 +248,7 @@ Reglas de negocio
 - Los usuarios creados mediante el endpoint general reciben el rol customer.
 - Las actualizaciones generales se limitan a nombre y apellido.
 - Los roles se centralizan mediante USER_ROLES.
-  Roles disponibles
-  | Constante | Valor |
-|---|---|
-
+  Roles disponiblesConstante	Valor
 | ADMIN | admin |
 
 | USER | customer |
@@ -383,10 +393,7 @@ La lógica está separada en:
 - mocks.service.js: validaciones y coordinación de operaciones.
 - mocks.repository.js: operaciones con MongoDB.
 - mocks.generator.js: generación de objetos ficticios.
-  Endpoints disponibles
-  | Método | Endpoint | Descripción | Guarda en MongoDB |
-|---|---|---|---|
-
+  Endpoints disponiblesMétodo	Endpoint	Descripción	Guarda en MongoDB
 | GET | /api/mocks/users?qty=5 | Genera clientes ficticios | No |
 
 | GET | /api/mocks/couriers?qty=5 | Genera repartidores ficticios | No |
@@ -403,8 +410,7 @@ El parámetro qty determina cuántos registros se generan.
 - Valor máximo: 100.
 - Solamente acepta números enteros.
   Ejemplo:
-GET http://localhost:8080/api/mocks/users?qty=3
-
+  GET http://localhost:8080/api/mocks/users?qty=3
 Si se envía un valor inválido, la API responde con código 400.
 Generar usuarios ficticios
 GET /api/mocks/users?qty=2
@@ -460,7 +466,7 @@ Los pedidos generados incluyen:
   Los identificadores de este endpoint son simulados y no necesariamente corresponden a documentos existentes en MongoDB.
   Generar entregas ficticias
   GET /api/mocks/deliveries?qty=2
-Las entregas incluyen:
+  Las entregas incluyen:
 - Identificador ficticio de pedido.
 - Identificador ficticio de repartidor.
 - Estado de entrega.
@@ -469,8 +475,7 @@ Las entregas incluyen:
   Estos datos tampoco se guardan en MongoDB.
   Insertar datos de prueba en MongoDB
   POST /api/mocks/seed?qty=2
-Este endpoint crea datos relacionados en la base de datos configurada.
-
+  Este endpoint crea datos relacionados en la base de datos configurada.
 Requisito previo: debe existir al menos un comercio activo en MongoDB.
 
 Para ejecutar la carga:
@@ -479,8 +484,7 @@ Para ejecutar la carga:
 3. Seleccionar el método POST.
 4. Utilizar http://localhost:8080/api/mocks/seed?qty=2.
 5. Enviar la petición sin cuerpo JSON.
-Ejemplo de respuesta:
-
+   Ejemplo de respuesta:
 {
 
   "message": "Datos de prueba insertados correctamente",
@@ -505,8 +509,7 @@ Con qty=2, se insertan ocho documentos:
 - 2 pedidos en orders.
 - 2 entregas en deliveries.
   Las contraseñas de los usuarios ficticios se almacenan utilizando bcrypt.
-Los correos de los usuarios insertados utilizan identificadores únicos para evitar colisiones.
-
+  Los correos de los usuarios insertados utilizan identificadores únicos para evitar colisiones.
 Importante: cada ejecución del endpoint inserta nuevos registros. No debe ejecutarse repetidamente sin necesidad.
 
 Se recomienda utilizar exclusivamente una base de datos de desarrollo o pruebas.
@@ -544,8 +547,7 @@ En el flujo actual de generación:
 - orders
 - deliveries
   Para verificar las relaciones, comparar los identificadores de los documentos.
-Ejemplo de filtro en MongoDB Compass:
-
+  Ejemplo de filtro en MongoDB Compass:
 { "_id": ObjectId("ID_DEL_DOCUMENTO") }
 
 Comprobar que:
@@ -646,28 +648,26 @@ info	3	Conexión exitosa, inicio del servidor y operaciones exitosas
 http	4	Eventos HTTP de diagnóstico y prueba
 debug	5	Información detallada de desarrollo
 
-
 Los números más bajos representan mayor gravedad.
 Diferencias entre entornos
 - Desarrollo (NODE_ENV=development): umbral debug; se admiten los seis niveles en consola y en el archivo combinado.
 - Producción (NODE_ENV=production): umbral info; se registran info, warning, error y fatal, pero no http ni debug.
 - El endpoint de prueba se registra únicamente cuando NODE_ENV es distinto de production. Para usarlo, se recomienda configurar explícitamente NODE_ENV=development.
-Integración en la aplicación
+  Integración en la aplicación
 - src/server.js: inicio exitoso (info) y fallas críticas de arranque (fatal).
 - src/config/db.js: conexión a MongoDB (info) y fallas iniciales (fatal).
 - src/middlewares/errorHandler.js: errores de negocio (warning) y errores del servidor (error).
 - src/services/mocks.service.js: generación e inserción de datos de prueba (info), cantidades inválidas (warning) y fallas de inserción (error).
 - src/services/orders.service.js: creación, actualización y eliminación de pedidos (info) e intentos de operar sobre pedidos inexistentes (warning).
-Endpoint de prueba
-GET /api/loggerTest — disponible solamente fuera de producción.
-
+  Endpoint de prueba
+  GET /api/loggerTest — disponible solamente fuera de producción.
 Con el servidor en desarrollo:
 npm run dev
 Abrir http://localhost:8080/api/loggerTest o consultar la ruta mediante Thunder Client/Postman. El endpoint emite un registro en cada nivel (debug, http, info, warning, error, fatal) y responde:
 {
-  "status": "success",
-  "message": "Prueba de logging ejecutada correctamente",
-  "levels": ["debug", "http", "info", "warning", "error", "fatal"]
+"status": "success",
+"message": "Prueba de logging ejecutada correctamente",
+"levels": ["debug", "http", "info", "warning", "error", "fatal"]
 }
 Las entradas error y fatal generadas por este endpoint son intencionales: no indican que el servidor haya fallado. En producción la ruta no existe y el middleware global responde con un 404 ROUTE_NOT_FOUND.
 Persistencia y rotación
@@ -675,7 +675,6 @@ Los archivos se crean automáticamente dentro de logs/:
 Archivo	Contenido	Rotación	Retención
 logs/error-AAAA-MM-DD.log	Solo error y fatal	Diaria o al alcanzar 10 MB	14 días
 logs/combined-AAAA-MM-DD.log	Niveles permitidos según el entorno	Diaria o al alcanzar 10 MB	7 días
-
 
 El formato de cada registro es AAAA-MM-DD HH:mm:ss [nivel] mensaje.
 
@@ -691,7 +690,7 @@ Verificación
 3. Revisar logs/error-AAAA-MM-DD.log: debe contener únicamente entradas error y fatal.
 4. Revisar logs/combined-AAAA-MM-DD.log para ver los niveles admitidos por el entorno.
 5. Ejecutar npm test para verificar la suite automatizada.
-La rotación está configurada por fecha y tamaño; las pruebas realizadas hasta el momento verificaron la creación y el filtrado de archivos, no una rotación forzada por superar 10 MB o cambiar de fecha.
+   La rotación está configurada por fecha y tamaño; las pruebas realizadas hasta el momento verificaron la creación y el filtrado de archivos, no una rotación forzada por superar 10 MB o cambiar de fecha.
 📘 Documentación interactiva con Swagger — Módulo 5
 ShipNow API incorpora Swagger UI y una especificación OpenAPI 3.0.3 para consultar los endpoints, inspeccionar parámetros y cuerpos JSON, revisar respuestas y probar operaciones desde el navegador.
 Acceso a la documentación
@@ -699,17 +698,15 @@ Acceso a la documentación
 2. Configurar .env y tener MongoDB disponible.
 3. Iniciar la API con npm run dev.
 4. Abrir http://localhost:8080/api/docs.
-La documentación utiliza como servidor de referencia http://localhost:8080. Si la aplicación corre en otro puerto, hay que ajustar esa URL en src/docs/swagger.js para que Try it out apunte al servidor correcto.
-Organización y configuración
-La configuración está separada de la lógica de rutas y controladores:
-Archivo	Función
-src/docs/swagger.js	Información general, servidor, tags y schemas reutilizables
-src/docs/users.yaml	Endpoints de usuarios
-src/docs/orders.yaml	Endpoints de pedidos
-src/docs/mocks.yaml	Endpoints de mocks, incluidos los de entregas ficticias
-src/docs/logger.yaml	Endpoint interno de prueba del logger
-
-
+   La documentación utiliza como servidor de referencia http://localhost:8080. Si la aplicación corre en otro puerto, hay que ajustar esa URL en src/docs/swagger.js para que Try it out apunte al servidor correcto.
+   Organización y configuración
+   La configuración está separada de la lógica de rutas y controladores:
+   Archivo	Función
+   src/docs/swagger.js	Información general, servidor, tags y schemas reutilizables
+   src/docs/users.yaml	Endpoints de usuarios
+   src/docs/orders.yaml	Endpoints de pedidos
+   src/docs/mocks.yaml	Endpoints de mocks, incluidos los de entregas ficticias
+   src/docs/logger.yaml	Endpoint interno de prueba del logger
 La interfaz se expone desde src/app.js mediante /api/docs, sin modificar la lógica de negocio.
 Endpoints documentados
 Tag	Método	Endpoint	Función
@@ -730,7 +727,6 @@ Mocks / Deliveries	GET	/api/mocks/deliveries	Generar entregas ficticias
 Mocks	POST	/api/mocks/seed	Insertar datos de prueba relacionados
 Logger	GET	/api/loggerTest	Probar los seis niveles de logging
 
-
 Total: 16 operaciones HTTP. Los tags requeridos son Users, Orders, Deliveries, Mocks y Logger. El endpoint de entregas ficticias aparece bajo dos tags; se trata de una sola operación, no de dos rutas diferentes.
 
 Aclaración sobre Deliveries: existe un modelo de entregas y generación de entregas mock, pero no un CRUD independiente /api/deliveries. La documentación no declara rutas inexistentes.
@@ -739,9 +735,9 @@ Se definieron en src/docs/swagger.js los schemas User, Order, OrderItem, Deliver
 
 Los errores siguen el formato del middleware centralizado:
 {
-  "status": "error",
-  "code": "INVALID_DATA",
-  "message": "Datos inválidos"
+"status": "error",
+"code": "INVALID_DATA",
+"message": "Datos inválidos"
 }
 Entre los errores documentados se incluyen IDs o datos inválidos, recursos inexistentes, datos duplicados, INVALID_MOCK_QUANTITY, NO_ACTIVE_STORES, INVALID_ORDER_STATUS y errores internos. La API actual no incorpora autenticación para estos endpoints, por lo que no se documentan respuestas de autenticación inexistentes.
 Cómo probar los endpoints
@@ -750,9 +746,9 @@ Cómo probar los endpoints
 - Mocks: los GET generan datos ficticios sin persistirlos. El parámetro opcional qty admite enteros de 1 a 100 y utiliza 10 por defecto.
 - Seed: POST /api/mocks/seed?qty=2 no requiere cuerpo JSON; inserta datos relacionados en MongoDB y necesita al menos un comercio activo. Usar únicamente una base de desarrollo o pruebas, porque cada ejecución agrega registros.
 - Logger: GET /api/loggerTest es una herramienta de validación, no una operación de negocio. Solo existe cuando NODE_ENV es distinto de production; en producción devuelve 404 ROUTE_NOT_FOUND. Ejecutarlo genera intencionalmente registros error y fatal.
-Los IDs mostrados como ejemplo en Swagger son ilustrativos: para operaciones reales se deben utilizar documentos existentes en MongoDB.
-Verificación realizada
-La generación de la especificación OpenAPI se comprobó localmente y devolvió 16 operaciones documentadas y cero errores de Swagger. También se ejecutó npm test, con 25 tests aprobados en 5 suites. Estas pruebas corresponden a la suite existente; no equivalen a una prueba exhaustiva de todos los ejemplos y operaciones de Swagger.
+  Los IDs mostrados como ejemplo en Swagger son ilustrativos: para operaciones reales se deben utilizar documentos existentes en MongoDB.
+  Verificación realizada
+  La generación de la especificación OpenAPI se comprobó localmente y devolvió 16 operaciones documentadas y cero errores de Swagger. También se ejecutó npm test, con 25 tests aprobados en 5 suites. Estas pruebas corresponden a la suite existente; no equivalen a una prueba exhaustiva de todos los ejemplos y operaciones de Swagger.
 ✅ Pruebas automatizadas — Jest y Supertest
 Para ejecutar las pruebas desde la raíz del proyecto:
 npm install
@@ -767,6 +763,66 @@ tests/logger.test.js	4	Endpoint, seis niveles, configuración y transportes de W
 Total	25	5 suites
 
 Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan errores para verificar sus respuestas sin provocar fallas reales en MongoDB. Los resultados corresponden a la ejecución local reportada durante la preparación de esta entrega.
+🧪 Testing funcional con Mocha, Chai y Supertest — Módulo 6
+Se incorporó una suite de 24 tests funcionales que comprueba respuestas exitosas y errores HTTP esperados. Se mantuvo la suite anterior de Jest con 25 tests, de manera que ambas herramientas se ejecutan por separado.
+Herramientas y ejecución
+- Mocha: organiza y ejecuta los tests funcionales.
+- Chai: verifica códigos HTTP, estructura JSON y propiedades importantes.
+- Supertest: realiza solicitudes a la aplicación Express sin abrir manualmente un puerto.
+- Mongoose / MongoDB local: preparan datos relacionados y permiten verificar inserciones.
+src/app.js exporta la instancia de Express; src/server.js se encarga de conectar MongoDB y escuchar el puerto en la ejecución normal. Los tests importan directamente app.
+
+Desde la raíz del proyecto, después de ejecutar npm install:
+npm test
+npm run test:functional
+El primer comando ejecuta Jest; el segundo, Mocha. Jest ignora test/functional/ mediante testPathIgnorePatterns.
+Entorno de testing aislado
+La suite funcional usa el archivo local .env.test, que no debe subirse al repositorio:
+NODE_ENV=test
+PORT=8081
+MONGODB_URI=mongodb://127.0.0.1:27017/shipnow_test
+Es necesario tener MongoDB local en ejecución. La base shipnow_test se reserva exclusivamente para datos descartables. No usarla para información personal, de desarrollo o producción.
+
+test/functional/helpers/testDatabase.js valida que NODE_ENV sea test, que la URI corresponda exactamente a MongoDB local con la base shipnow_test y que la conexión activa apunte a esa base antes de permitir una limpieza. Los tests crean los datos necesarios y eliminan los documentos de las colecciones de testing durante su preparación o finalización.
+Advertencia: la limpieza elimina documentos de las colecciones de shipnow_test. No ejecutar estas pruebas contra bases con información importante.
+
+Para configurar el proyecto en otra computadora, crear .env.test con los valores anteriores; no copiar credenciales ni apuntar a la base de desarrollo. El .gitignore excluye .env y .env.*, salvo archivos de ejemplo.
+Cobertura funcional
+Archivo	Tests	Comportamientos cubiertos
+test/functional/users.test.js	5	Listado, creación, datos incompletos, usuario inexistente e ID inválido
+test/functional/orders.test.js	7	Listado, creación, consulta por ID, cambio de estado, datos incompletos, pedido inexistente y estado inválido
+test/functional/api.test.js	9	Mocks de usuarios, repartidores, pedidos y entregas; cantidades inválidas; logger; Swagger UI; ruta inexistente
+test/functional/seed.test.js	3	Inserción relacionada, cantidad inválida y ausencia de comercios activos
+Total Mocha	24	Tests funcionales aprobados
+
+
+Los tests verifican el status HTTP, el formato de respuesta y campos relevantes, como status, payload, _id, total, items, levels, inserted o los campos status, code y message en los errores.
+
+La suite prepara usuarios y comercios de prueba antes de crear pedidos, sin depender de registros cargados manualmente. El test de POST /api/mocks/seed comprueba tanto el resumen de inserciones como los documentos persistidos.
+Coherencia con Swagger y manejo de errores
+Se comprueban, entre otros, los siguientes comportamientos documentados:
+- GET /api/users/:uid y GET /api/orders/:oid: 404 cuando el recurso no existe.
+- Creación de usuarios o pedidos con datos incompletos: 400 INVALID_DATA.
+- Estado de pedido no permitido: 400 INVALID_ORDER_STATUS.
+- Cantidad de mocks fuera del rango 1–100: 400 INVALID_MOCK_QUANTITY.
+- Seed sin comercios activos: 400 NO_ACTIVE_STORES.
+- Ruta desconocida: 404 ROUTE_NOT_FOUND.
+- GET /api/loggerTest: respuesta 200 con los seis niveles de logging en entorno de test.
+- GET /api/docs/: respuesta 200 con contenido HTML de Swagger UI.
+El formato de error esperado es:
+{
+  "status": "error",
+  "code": "INVALID_DATA",
+  "message": "Descripción del error"
+}
+Resultados verificados
+Suite	Resultado
+Jest (npm test)	25 tests aprobados, 5 suites
+Mocha (npm run test:functional)	24 tests aprobados
+Total	49 tests aprobados
+
+
+Resultados comprobados localmente el 16 de noviembre de 2026. Las suites cubren los escenarios enumerados, pero no todos los endpoints ni todas las combinaciones posibles de datos.
 🔐 Seguridad y buenas prácticas
 - Las contraseñas persistidas se almacenan mediante bcrypt.
 - Las variables de entorno se centralizan y validan.
@@ -776,17 +832,17 @@ Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan 
 - El parámetro qty tiene límites para evitar cargas excesivas.
 - Los endpoints de seed están destinados a entornos de desarrollo y pruebas.
 📌 Próximas mejoras
-- Ampliar la cobertura de pruebas automatizadas, especialmente los casos de integración con una base de datos de prueba.
+- Ampliar la cobertura funcional a productos, comercios y más combinaciones de estados.
 - Agregar transacciones para las operaciones de seed.
 - Implementar autenticación y autorización para la carga de datos.
-- Incorporar limpieza controlada de registros de prueba.
+- Ampliar la estrategia de limpieza para nuevos escenarios de pruebas, manteniendo el aislamiento de shipnow_test.
 - Ampliar los escenarios de mocking para simular diferentes etapas de entrega.
 - Agregar contenedores Docker.
 📚 Entrega
 Proyecto: ShipNow API  
 
-Pre-entregas: Módulos 1, 2, 3, 4 y 5  
+Pre-entregas: Módulos 1, 2, 3, 4, 5 y 6  
 
 Repositorio: https://github.com/elmirsantiago/shipnow-api
 
-El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores, logging con Winston y documentación interactiva con Swagger/OpenAPI. La suite automatizada existente cuenta con 25 pruebas aprobadas.
+El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores, logging con Winston y documentación interactiva con Swagger/OpenAPI. Las suites automatizadas cuentan con 49 pruebas aprobadas: 25 de Jest y 24 funcionales con Mocha, Chai y Supertest

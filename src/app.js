@@ -8,6 +8,7 @@ import storesRouter from "./routes/stores.router.js";
 import ordersRouter from "./routes/orders.router.js";
 import productsRouter from "./routes/products.router.js";
 import mocksRouter from "./routes/mocks.router.js";
+import filesRouter from "./routes/files.router.js";
 
 import logger from "./config/logger.js";
 import AppError from "./errors/AppError.js";
@@ -26,6 +27,9 @@ app.use("/api/stores", storesRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/mocks", mocksRouter);
+
+// Carga de documentos y comprobantes
+app.use("/api", filesRouter);
 
 // Endpoint de validación del logger
 // Disponible únicamente fuera de producción

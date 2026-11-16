@@ -1,5 +1,6 @@
 
 import mongoose from "mongoose";
+import multer from "multer";
 
 import AppError from "../errors/AppError.js";
 import { ERROR_DICTIONARY } from "../errors/errorDictionary.js";
@@ -25,7 +26,40 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 2. Errores de validación de Mongoose
+  // 2. Errores propios de Multer
+  if (err instanceof multer.MulterError) {
+    let errorType = "FILE_UPLOAD_ERROR";
+
+    if (err.code === "LIMIT_FILE_SIZE") {
+      errorType = "FILE_TOO_LARGE";
+    } else if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      errorType = "INVALID_FILE_FIELD";
+    } else if (
+      [
+        "LIMIT_FILE_COUNT",
+        "LIMIT_FIELD_COUNT",
+        "LIMIT_PART_COUNT",
+        "LIMIT_FIELD_KEY",
+        "LIMIT_FIELD_VALUE"
+      ].includes(err.code)
+    ) {
+      errorType = "INVALID_DATA";
+    }
+
+    const error = ERROR_DICTIONARY[errorType];
+
+    logger.warning(
+      `${requestInfo} - Error de Multer: ${err.code}`
+    );
+
+    return res.status(error.statusCode).json({
+      status: "error",
+      code: error.code,
+      message: error.message
+    });
+  }
+
+  // 3. Errores de validación de Mongoose
   if (err instanceof mongoose.Error.ValidationError) {
     const error = ERROR_DICTIONARY.INVALID_DATA;
 
@@ -40,7 +74,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 3. IDs o valores incorrectos en Mongoose
+  // 4. IDs o valores incorrectos en Mongoose
   if (err instanceof mongoose.Error.CastError) {
     const error = ERROR_DICTIONARY.INVALID_DATA;
 
@@ -55,7 +89,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 4. Datos duplicados en MongoDB
+  // 5. Datos duplicados en MongoDB
   if (err.code === 11000) {
     const error = ERROR_DICTIONARY.DUPLICATE_DATA;
 
@@ -70,7 +104,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 5. JSON mal formado
+  // 6. JSON mal formado
   if (
     err instanceof SyntaxError &&
     err.status === 400 &&
@@ -89,7 +123,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 6. Errores de conexión u operaciones de MongoDB
+  // 7. Errores de conexión u operaciones de MongoDB
   if (
     err.name === "MongooseServerSelectionError" ||
     err.name === "MongoServerError" ||
@@ -108,7 +142,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // 7. Errores inesperados
+  // 8. Errores inesperados
   logger.error(
     `${requestInfo} - Error inesperado: ${err.stack || err.message}`
   );

@@ -10,6 +10,8 @@ En la Pre-entrega del Módulo 2, se incorporó un sistema de mocking y carga de 
 En la Pre-entrega del Módulo 3, se incorporó un manejo centralizado de errores mediante errores de dominio personalizados, un diccionario común, un middleware global y pruebas automatizadas.
 
 En la Pre-entrega del Módulo 4, se integró Winston para logging centralizado, persistencia y rotación de archivos, diferenciación por entorno y un endpoint de prueba.
+
+En la Pre-entrega del Módulo 5, se incorporó documentación interactiva mediante Swagger UI y OpenAPI 3.0.3, con 16 operaciones HTTP documentadas, cinco grupos temáticos y schemas reutilizables.
 🛠️ Tecnologías utilizadas
 - Node.js: entorno de ejecución de JavaScript.
 - Express: framework para desarrollar la API REST.
@@ -23,6 +25,8 @@ En la Pre-entrega del Módulo 4, se integró Winston para logging centralizado, 
 - Supertest: pruebas HTTP de endpoints Express.
 - Winston: logging centralizado con niveles personalizados.
 - winston-daily-rotate-file: rotación y retención de archivos de logs.
+- swagger-ui-express: interfaz interactiva de documentación.
+- swagger-jsdoc: generación de la especificación OpenAPI a partir de archivos YAML.
 🏗️ Arquitectura del proyecto
 La aplicación utiliza la siguiente arquitectura:
 
@@ -60,8 +64,15 @@ src/
 
 │   ├── db.js
 
-│   └── index.js
+│   ├── index.js
+│   └── logger.js
 
+├── docs/
+│   ├── swagger.js
+│   ├── users.yaml
+│   ├── orders.yaml
+│   ├── mocks.yaml
+│   └── logger.yaml
 ├── controllers/
 
 │   ├── users.controller.js
@@ -681,6 +692,67 @@ Verificación
 4. Revisar logs/combined-AAAA-MM-DD.log para ver los niveles admitidos por el entorno.
 5. Ejecutar npm test para verificar la suite automatizada.
 La rotación está configurada por fecha y tamaño; las pruebas realizadas hasta el momento verificaron la creación y el filtrado de archivos, no una rotación forzada por superar 10 MB o cambiar de fecha.
+📘 Documentación interactiva con Swagger — Módulo 5
+ShipNow API incorpora Swagger UI y una especificación OpenAPI 3.0.3 para consultar los endpoints, inspeccionar parámetros y cuerpos JSON, revisar respuestas y probar operaciones desde el navegador.
+Acceso a la documentación
+1. Instalar dependencias con npm install.
+2. Configurar .env y tener MongoDB disponible.
+3. Iniciar la API con npm run dev.
+4. Abrir http://localhost:8080/api/docs.
+La documentación utiliza como servidor de referencia http://localhost:8080. Si la aplicación corre en otro puerto, hay que ajustar esa URL en src/docs/swagger.js para que Try it out apunte al servidor correcto.
+Organización y configuración
+La configuración está separada de la lógica de rutas y controladores:
+Archivo	Función
+src/docs/swagger.js	Información general, servidor, tags y schemas reutilizables
+src/docs/users.yaml	Endpoints de usuarios
+src/docs/orders.yaml	Endpoints de pedidos
+src/docs/mocks.yaml	Endpoints de mocks, incluidos los de entregas ficticias
+src/docs/logger.yaml	Endpoint interno de prueba del logger
+
+
+La interfaz se expone desde src/app.js mediante /api/docs, sin modificar la lógica de negocio.
+Endpoints documentados
+Tag	Método	Endpoint	Función
+Users	GET	/api/users	Listar usuarios
+Users	GET	/api/users/{uid}	Consultar usuario
+Users	POST	/api/users	Crear usuario
+Users	PUT	/api/users/{uid}	Actualizar nombre o apellido
+Users	DELETE	/api/users/{uid}	Eliminar usuario
+Orders	GET	/api/orders	Listar pedidos
+Orders	GET	/api/orders/{oid}	Consultar pedido
+Orders	POST	/api/orders	Crear pedido
+Orders	PUT	/api/orders/{oid}/status	Cambiar estado del pedido
+Orders	DELETE	/api/orders/{oid}	Eliminar pedido
+Mocks	GET	/api/mocks/users	Generar usuarios ficticios
+Mocks	GET	/api/mocks/couriers	Generar repartidores ficticios
+Mocks	GET	/api/mocks/orders	Generar pedidos ficticios
+Mocks / Deliveries	GET	/api/mocks/deliveries	Generar entregas ficticias
+Mocks	POST	/api/mocks/seed	Insertar datos de prueba relacionados
+Logger	GET	/api/loggerTest	Probar los seis niveles de logging
+
+
+Total: 16 operaciones HTTP. Los tags requeridos son Users, Orders, Deliveries, Mocks y Logger. El endpoint de entregas ficticias aparece bajo dos tags; se trata de una sola operación, no de dos rutas diferentes.
+
+Aclaración sobre Deliveries: existe un modelo de entregas y generación de entregas mock, pero no un CRUD independiente /api/deliveries. La documentación no declara rutas inexistentes.
+Schemas reutilizables
+Se definieron en src/docs/swagger.js los schemas User, Order, OrderItem, Delivery, ErrorResponse y SuccessResponse. Los endpoints documentan los parámetros de ruta, cuerpos de solicitud cuando corresponden, respuestas exitosas y posibles errores.
+
+Los errores siguen el formato del middleware centralizado:
+{
+  "status": "error",
+  "code": "INVALID_DATA",
+  "message": "Datos inválidos"
+}
+Entre los errores documentados se incluyen IDs o datos inválidos, recursos inexistentes, datos duplicados, INVALID_MOCK_QUANTITY, NO_ACTIVE_STORES, INVALID_ORDER_STATUS y errores internos. La API actual no incorpora autenticación para estos endpoints, por lo que no se documentan respuestas de autenticación inexistentes.
+Cómo probar los endpoints
+- Users: POST /api/users recibe firstName, lastName, email y password. La API asigna el rol customer y no devuelve la contraseña en la creación. PUT /api/users/{uid} solo permite modificar firstName y/o lastName.
+- Orders: para crear un pedido se necesitan los IDs de un usuario y un comercio activo, deliveryAddress y al menos un item con name, quantity y price. El total se calcula automáticamente. Los estados permitidos son created, assigned, picked_up, in_transit, delivered y cancelled.
+- Mocks: los GET generan datos ficticios sin persistirlos. El parámetro opcional qty admite enteros de 1 a 100 y utiliza 10 por defecto.
+- Seed: POST /api/mocks/seed?qty=2 no requiere cuerpo JSON; inserta datos relacionados en MongoDB y necesita al menos un comercio activo. Usar únicamente una base de desarrollo o pruebas, porque cada ejecución agrega registros.
+- Logger: GET /api/loggerTest es una herramienta de validación, no una operación de negocio. Solo existe cuando NODE_ENV es distinto de production; en producción devuelve 404 ROUTE_NOT_FOUND. Ejecutarlo genera intencionalmente registros error y fatal.
+Los IDs mostrados como ejemplo en Swagger son ilustrativos: para operaciones reales se deben utilizar documentos existentes en MongoDB.
+Verificación realizada
+La generación de la especificación OpenAPI se comprobó localmente y devolvió 16 operaciones documentadas y cero errores de Swagger. También se ejecutó npm test, con 25 tests aprobados en 5 suites. Estas pruebas corresponden a la suite existente; no equivalen a una prueba exhaustiva de todos los ejemplos y operaciones de Swagger.
 ✅ Pruebas automatizadas — Jest y Supertest
 Para ejecutar las pruebas desde la raíz del proyecto:
 npm install
@@ -713,8 +785,8 @@ Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan 
 📚 Entrega
 Proyecto: ShipNow API  
 
-Pre-entregas: Módulos 1, 2, 3 y 4  
+Pre-entregas: Módulos 1, 2, 3, 4 y 5  
 
 Repositorio: https://github.com/elmirsantiago/shipnow-api
 
-El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores y logging profesional con Winston, verificado mediante 25 pruebas automatizadas.
+El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores, logging con Winston y documentación interactiva con Swagger/OpenAPI. La suite automatizada existente cuenta con 25 pruebas aprobadas.

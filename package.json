@@ -1,3 +1,4 @@
+
 {
   "name": "shipnow-api",
   "version": "1.0.0",
@@ -5,13 +6,14 @@
   "main": "src/server.js",
   "type": "module",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=22.13.0 <25"
   },
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
-    "test:functional": "node --env-file=.env.test ./node_modules/mocha/bin/mocha.js \"test/functional/**/*.test.js\" --timeout 15000"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:functional": "node --env-file=.env.test ./node_modules/mocha/bin/mocha.js \"test/functional/**/*.test.js\" --timeout 15000",
+    "test:all": "npm test && npm run test:functional"
   },
   "jest": {
     "testEnvironment": "node",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "chai": "^6.3.0",
+    "cross-env": "^7.0.3",
     "jest": "^30.5.2",
     "mocha": "^12.0.3",
     "nodemon": "^3.1.9",

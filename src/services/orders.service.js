@@ -19,8 +19,54 @@ class OrdersService {
     }
   }
 
-  async getAllOrders() {
-    return ordersRepository.getAll();
+  async getAllOrders({
+    page = 1,
+    limit = 10,
+    status,
+    priority
+  } = {}) {
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    if (
+      !Number.isSafeInteger(pageNumber) ||
+      pageNumber < 1 ||
+      !Number.isSafeInteger(limitNumber) ||
+      limitNumber < 1 ||
+      limitNumber > 100
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "La página debe ser mayor a 0 y el límite debe estar entre 1 y 100"
+      );
+    }
+
+    if (
+      status !== undefined &&
+      !Object.values(ORDER_STATUS).includes(status)
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "El estado utilizado para filtrar pedidos no es válido"
+      );
+    }
+
+    if (
+      priority !== undefined &&
+      !Object.values(ORDER_PRIORITY).includes(priority)
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "La prioridad utilizada para filtrar pedidos no es válida"
+      );
+    }
+
+    return ordersRepository.getAll({
+      page: pageNumber,
+      limit: limitNumber,
+      status,
+      priority
+    });
   }
 
   async getOrderById(id) {

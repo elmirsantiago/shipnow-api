@@ -4,11 +4,17 @@ import usersService from "../services/users.service.js";
 class UsersController {
   async getAll(req, res, next) {
     try {
-      const users = await usersService.getAllUsers();
+      const { page = 1, limit = 10 } = req.query;
 
-      return res.json({
+      const result = await usersService.getAllUsers({
+        page,
+        limit
+      });
+
+      return res.status(200).json({
         status: "success",
-        payload: users
+        payload: result.users,
+        pagination: result.pagination
       });
     } catch (error) {
       next(error);
@@ -19,7 +25,7 @@ class UsersController {
     try {
       const user = await usersService.getUserById(req.params.uid);
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: user
       });
@@ -48,7 +54,7 @@ class UsersController {
         req.body
       );
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: user
       });
@@ -61,7 +67,7 @@ class UsersController {
     try {
       const user = await usersService.deleteUser(req.params.uid);
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: user
       });

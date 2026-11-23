@@ -1,14 +1,28 @@
 
+
 import ordersService from "../services/orders.service.js";
 
 class OrdersController {
   async getAll(req, res, next) {
     try {
-      const orders = await ordersService.getAllOrders();
+      const {
+        page = 1,
+        limit = 10,
+        status,
+        priority
+      } = req.query;
 
-      return res.json({
+      const result = await ordersService.getAllOrders({
+        page,
+        limit,
+        status,
+        priority
+      });
+
+      return res.status(200).json({
         status: "success",
-        payload: orders
+        payload: result.orders,
+        pagination: result.pagination
       });
     } catch (error) {
       next(error);
@@ -19,7 +33,7 @@ class OrdersController {
     try {
       const order = await ordersService.getOrderById(req.params.oid);
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: order
       });
@@ -48,7 +62,7 @@ class OrdersController {
         req.body?.status
       );
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: order
       });
@@ -61,7 +75,7 @@ class OrdersController {
     try {
       const order = await ordersService.deleteOrder(req.params.oid);
 
-      return res.json({
+      return res.status(200).json({
         status: "success",
         payload: order
       });

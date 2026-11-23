@@ -2,10 +2,29 @@
 import UserModel from "../models/user.model.js";
 
 class UsersRepository {
-  async getAll() {
-    return UserModel.find()
-      .select("-password")
-      .lean();
+  async getAll({ page = 1, limit = 10 } = {}) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      UserModel.find()
+        .select("-password")
+        .sort({ _id: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      UserModel.countDocuments()
+    ]);
+
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   async getById(id) {

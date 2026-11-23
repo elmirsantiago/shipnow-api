@@ -1,5 +1,8 @@
 
 import swaggerJSDoc from "swagger-jsdoc";
+import config from "../config/index.js";
+
+const isProduction = config.nodeEnv === "production";
 
 const options = {
   definition: {
@@ -9,13 +12,15 @@ const options = {
       title: "ShipNow API",
       version: "1.0.0",
       description:
-        "API REST para la gestión de usuarios, comercios, productos, pedidos y entregas. Incluye generación de datos ficticios, manejo centralizado de errores y logging con Winston."
+        "API REST para la gestión de usuarios, comercios, productos, pedidos y entregas. Incluye validaciones, manejo centralizado de errores y logging con Winston."
     },
 
     servers: [
       {
         url: "http://localhost:8080",
-        description: "Servidor local de desarrollo"
+        description: isProduction
+          ? "Servidor de producción (configuración local)"
+          : "Servidor local de desarrollo"
       }
     ],
 
@@ -28,18 +33,22 @@ const options = {
         name: "Orders",
         description: "Gestión de pedidos"
       },
-      {
-        name: "Deliveries",
-        description: "Modelo y datos de entregas"
-      },
-      {
-        name: "Mocks",
-        description: "Generación de datos de prueba"
-      },
-      {
-        name: "Logger",
-        description: "Validación del sistema de logging"
-      }
+      ...(!isProduction
+        ? [
+            {
+              name: "Deliveries",
+              description: "Modelo y datos de entregas ficticias"
+            },
+            {
+              name: "Mocks",
+              description: "Generación de datos de prueba"
+            },
+            {
+              name: "Logger",
+              description: "Validación del sistema de logging"
+            }
+          ]
+        : [])
     ],
 
     components: {
@@ -197,10 +206,28 @@ const options = {
     }
   },
 
-  // Archivos YAML con la documentación de endpoints
   apis: ["./src/docs/*.yaml"]
 };
 
 const swaggerSpec = swaggerJSDoc(options);
+
+if (isProduction) {
+  const excludedPaths = [
+    "/api/mocks",
+    "/api/loggerTest"
+  ];
+
+  for (const route of Object.keys(swaggerSpec.paths || {})) {
+    if (
+      excludedPaths.some(
+        excluded =>
+          route === excluded ||
+          route.startsWith(`${excluded}/`)
+      )
+    ) {
+      delete swaggerSpec.paths[route];
+    }
+  }
+}
 
 export default swaggerSpec;

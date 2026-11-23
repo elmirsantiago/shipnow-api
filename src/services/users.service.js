@@ -13,8 +13,27 @@ class UsersService {
     }
   }
 
-  async getAllUsers() {
-    return usersRepository.getAll();
+  async getAllUsers({ page = 1, limit = 10 } = {}) {
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    if (
+      !Number.isSafeInteger(pageNumber) ||
+      pageNumber < 1 ||
+      !Number.isSafeInteger(limitNumber) ||
+      limitNumber < 1 ||
+      limitNumber > 100
+    ) {
+      throw new AppError(
+        "INVALID_DATA",
+        "La página debe ser mayor a 0 y el límite debe estar entre 1 y 100"
+      );
+    }
+
+    return usersRepository.getAll({
+      page: pageNumber,
+      limit: limitNumber
+    });
   }
 
   async getUserById(id) {

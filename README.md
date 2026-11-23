@@ -2,6 +2,7 @@
 API REST para la gestión de usuarios, productos, comercios, pedidos y entregas, desarrollada con Node.js, Express y MongoDB.
 
 El proyecto simula el funcionamiento de una plataforma de logística y envíos.
+Nota: las secciones de los módulos 1 a 7 conservan la documentación y los resultados históricos de cada etapa. La sección final del Módulo 8 contiene la configuración y los resultados vigentes.
 
 En la Pre-entrega del Módulo 1, se implementó una arquitectura profesional basada en Router → Controller → Service → Repository, con configuración centralizada y constantes de dominio.
 
@@ -16,6 +17,8 @@ En la Pre-entrega del Módulo 5, se incorporó documentación interactiva median
 En la Pre-entrega del Módulo 6, se incorporaron 24 tests funcionales con Mocha, Chai y Supertest, utilizando una base de datos local exclusiva para testing y limpieza controlada.
 
 En la Pre-entrega del Módulo 7, se integró Multer para cargar documentos de usuarios y comprobantes de pedidos, con validación de formatos, contenido y tamaño, persistencia de metadatos en MongoDB y documentación OpenAPI. Se añadieron 11 tests funcionales: 35 pruebas funcionales y 25 de Jest, 60 aprobadas en total.
+En la Pre-entrega del Módulo 8 se añadieron paginación y filtros para listados de usuarios y pedidos, configuración de producción, límites de payload, Docker, separación de rutas de prueba y documentación Swagger adaptada al entorno. Se verificaron 25 tests de Jest y 47 funcionales de Mocha (72 en total).
+
 🛠️ Tecnologías utilizadas
 - Node.js: entorno de ejecución de JavaScript.
 - Express: framework para desarrollar la API REST.
@@ -36,9 +39,9 @@ En la Pre-entrega del Módulo 7, se integró Multer para cargar documentos de us
 - Multer: recepción y almacenamiento de archivos multipart/form-data.
   🏗️ Arquitectura del proyecto
   La aplicación utiliza la siguiente arquitectura:
-Router → Controller → Service → Repository → Model → MongoDB
-Responsabilidades
-Routes
+  Router → Controller → Service → Repository → Model → MongoDB
+  Responsabilidades
+  Routes
 - Definen los endpoints disponibles.
 - Conectan cada ruta con su Controller.
 - No contienen lógica de negocio.
@@ -65,8 +68,7 @@ Routes
 - errorHandler.js transforma los errores en respuestas HTTP consistentes.
   📁 Estructura del proyecto
   src/
-├── config/
-
+  ├── config/
 │   ├── db.js
 
 │   ├── index.js
@@ -183,8 +185,7 @@ test/
 3. Configurar variables de entorno
    Crear un archivo .env en la raíz del proyecto, tomando como referencia .env.example.
    Ejemplo:
-PORT=8080
-
+   PORT=8080
 MONGODB_URI=mongodb://127.0.0.1:27017/shipnow
 
 NODE_ENV=development
@@ -200,8 +201,7 @@ La configuración se centraliza en src/config/index.js.
 5. Ejecutar la aplicación
    Modo desarrollo:
    npm run dev
-Modo normal:
-
+   Modo normal:
 npm start
 
 Servidor local:
@@ -216,7 +216,9 @@ Respuesta esperada:
 
   "status": "ok",
 
-  "message": "ShipNow API funcionando correctamente"
+  "environment": "development",
+"uptime": 12,
+"timestamp": "2026-11-23T18:45:14.812Z"
 
 }
 👤 Usuarios (Users)
@@ -256,8 +258,7 @@ Reglas de negocio
 - Los roles se centralizan mediante USER_ROLES.
   Roles disponiblesConstante    Valor
   | ADMIN | admin |
-| USER | customer |
-
+  | USER | customer |
 | STORE | store |
 
 | COURIER | courier |
@@ -301,10 +302,7 @@ Reglas de negocio
 - Los productos sin stock tienen estado out_of_stock.
 - El listado general devuelve únicamente productos disponibles.
   Los estados se definen mediante PRODUCT_STATUS.
-  🏪 Comercios (Stores)
-  | Método | Endpoint | Descripción |
-|---|---|---|
-
+  🏪 Comercios (Stores)Método	Endpoint	Descripción
 | GET | /api/stores | Listar comercios activos |
 
 | GET | /api/stores/:sid | Obtener comercio por ID |
@@ -332,10 +330,7 @@ Reglas de negocio
 - Se comprueba que el propietario exista.
 - El listado general devuelve comercios activos.
 - Las actualizaciones se limitan a campos autorizados.
-  🚚 Pedidos (Orders)
-  | Método | Endpoint | Descripción |
-|---|---|---|
-
+  🚚 Pedidos (Orders)Método	Endpoint	Descripción
 | GET | /api/orders | Listar pedidos |
 
 | GET | /api/orders/:oid | Obtener pedido por ID |
@@ -366,7 +361,7 @@ POST /api/orders
   "price": 15000
 
 }
-  ]
+]
 
 }
 
@@ -385,8 +380,7 @@ Reglas de negocio
   low, normal, high.
   🧪 Mocking y datos de prueba — Módulo 2
   Se incorporó un módulo de mocking bajo /api/mocks, que permite generar datos simulados sin cargarlos manualmente.
-La generación se realiza mediante @faker-js/faker.
-
+  La generación se realiza mediante @faker-js/faker.
 La lógica está separada en:
 - mocks.router.js: definición de endpoints.
 - mocks.controller.js: recepción de peticiones y respuestas HTTP.
@@ -395,8 +389,7 @@ La lógica está separada en:
 - mocks.generator.js: generación de objetos ficticios.
   Endpoints disponiblesMétodo   Endpoint        Descripción     Guarda en MongoDB
   | GET | /api/mocks/users?qty=5 | Genera clientes ficticios | No |
-| GET | /api/mocks/couriers?qty=5 | Genera repartidores ficticios | No |
-
+  | GET | /api/mocks/couriers?qty=5 | Genera repartidores ficticios | No |
 | GET | /api/mocks/orders?qty=5 | Genera pedidos ficticios | No |
 
 | GET | /api/mocks/deliveries?qty=5 | Genera entregas ficticias | No |
@@ -413,8 +406,7 @@ El parámetro qty determina cuántos registros se generan.
   Si se envía un valor inválido, la API responde con código 400.
   Generar usuarios ficticios
   GET /api/mocks/users?qty=2
-Ejemplo de respuesta:
-
+  Ejemplo de respuesta:
 [
 
   {
@@ -425,7 +417,7 @@ Ejemplo de respuesta:
 "email": "ana@example.com",
 
 "role": "customer"
-  },
+},
 
   {
 "firstName": "Luis",
@@ -435,7 +427,7 @@ Ejemplo de respuesta:
 "email": "luis@example.com",
 
 "role": "customer"
-  }
+}
 
 ]
 
@@ -471,7 +463,7 @@ Los pedidos generados incluyen:
   POST /api/mocks/seed?qty=2
   Este endpoint crea datos relacionados en la base de datos configurada.
   Requisito previo: debe existir al menos un comercio activo en MongoDB.
-Para ejecutar la carga:
+  Para ejecutar la carga:
 1. Iniciar MongoDB y el servidor.
 2. Abrir Thunder Client o Postman.
 3. Seleccionar el método POST.
@@ -479,8 +471,7 @@ Para ejecutar la carga:
 5. Enviar la petición sin cuerpo JSON.
    Ejemplo de respuesta:
    {
-  "message": "Datos de prueba insertados correctamente",
-
+   "message": "Datos de prueba insertados correctamente",
   "inserted": {
 "users": 2,
 
@@ -489,7 +480,7 @@ Para ejecutar la carga:
 "orders": 2,
 
 "deliveries": 2
-  }
+}
 
 }
 
@@ -501,10 +492,9 @@ Con qty=2, se insertan ocho documentos:
   Las contraseñas de los usuarios ficticios se almacenan utilizando bcrypt.
   Los correos de los usuarios insertados utilizan identificadores únicos para evitar colisiones.
   Importante: cada ejecución del endpoint inserta nuevos registros. No debe ejecutarse repetidamente sin necesidad.
-Se recomienda utilizar exclusivamente una base de datos de desarrollo o pruebas.
-Relaciones entre entidades
-La carga de datos respeta las siguientes relaciones:
-
+  Se recomienda utilizar exclusivamente una base de datos de desarrollo o pruebas.
+  Relaciones entre entidades
+  La carga de datos respeta las siguientes relaciones:
 Pedido → Cliente
 
 Cada pedido insertado referencia un usuario existente con rol customer.
@@ -538,7 +528,7 @@ En el flujo actual de generación:
   Para verificar las relaciones, comparar los identificadores de los documentos.
   Ejemplo de filtro en MongoDB Compass:
   { "_id": ObjectId("ID_DEL_DOCUMENTO") }
-Comprobar que:
+  Comprobar que:
 - El customer de un pedido corresponde a un usuario con rol customer.
 - El courier de una entrega corresponde a un usuario con rol courier.
 - El order de una entrega corresponde a un pedido existente.
@@ -567,30 +557,29 @@ Comprobar que:
 - Verificación de la relación entre pedido y cliente.
   ⚠️ Manejo profesional de errores — Módulo 3
   La API centraliza las respuestas de error. Las rutas conectan los controladores; los servicios detectan errores de dominio y lanzan instancias de AppError; los controladores envían esos errores mediante next(error); y el middleware global src/middlewares/errorHandler.js construye la respuesta HTTP final.
-Flujo: Router → Controller → Service → AppError → errorHandler → respuesta HTTP.
-Estructura uniforme
-Las respuestas de error utilizan los campos status, code y message:
-{
-"status": "error",
-"code": "PRODUCT_NOT_FOUND",
-"message": "Producto no encontrado"
-}
-Los errores no controlados no exponen trazas ni detalles internos al cliente; se registran en el servidor y se devuelve un mensaje genérico.
-Diccionario de errores
-Código  HTTP    Situación
-INVALID_DATA    400     Datos o identificadores inválidos
-INVALID_MOCK_QUANTITY   400     qty fuera del rango permitido o no entero
-USER_NOT_FOUND  404     Usuario inexistente
-STORE_NOT_FOUND 404     Comercio inexistente
-PRODUCT_NOT_FOUND       404     Producto inexistente
-ORDER_NOT_FOUND 404     Pedido inexistente
-INVALID_ORDER_STATUS    400     Estado de pedido no permitido
-NO_ACTIVE_STORES        400     No existen comercios activos para ejecutar el seed
-DUPLICATE_DATA  409     Registro duplicado en MongoDB
-DATABASE_ERROR  500     Falla reconocida de base de datos
-ROUTE_NOT_FOUND 404     Endpoint inexistente
-INTERNAL_ERROR  500     Error inesperado
-
+  Flujo: Router → Controller → Service → AppError → errorHandler → respuesta HTTP.
+  Estructura uniforme
+  Las respuestas de error utilizan los campos status, code y message:
+  {
+  "status": "error",
+  "code": "PRODUCT_NOT_FOUND",
+  "message": "Producto no encontrado"
+  }
+  Los errores no controlados no exponen trazas ni detalles internos al cliente; se registran en el servidor y se devuelve un mensaje genérico.
+  Diccionario de errores
+  Código  HTTP    Situación
+  INVALID_DATA    400     Datos o identificadores inválidos
+  INVALID_MOCK_QUANTITY   400     qty fuera del rango permitido o no entero
+  USER_NOT_FOUND  404     Usuario inexistente
+  STORE_NOT_FOUND 404     Comercio inexistente
+  PRODUCT_NOT_FOUND       404     Producto inexistente
+  ORDER_NOT_FOUND 404     Pedido inexistente
+  INVALID_ORDER_STATUS    400     Estado de pedido no permitido
+  NO_ACTIVE_STORES        400     No existen comercios activos para ejecutar el seed
+  DUPLICATE_DATA  409     Registro duplicado en MongoDB
+  DATABASE_ERROR  500     Falla reconocida de base de datos
+  ROUTE_NOT_FOUND 404     Endpoint inexistente
+  INTERNAL_ERROR  500     Error inesperado
 El diccionario está definido en src/errors/errorDictionary.js. La clase src/errors/AppError.js permite lanzar un error por su tipo y, cuando corresponde, personalizar el mensaje.
 Ejemplos para probar en Thunder Client o Postman
 ID de producto inválido
@@ -662,8 +651,7 @@ Diferencias entre entornos
   Archivo Contenido       Rotación        Retención
   logs/error-AAAA-MM-DD.log       Solo error y fatal      Diaria o al alcanzar 10 MB      14 días
   logs/combined-AAAA-MM-DD.log    Niveles permitidos según el entorno     Diaria o al alcanzar 10 MB      7 días
-El formato de cada registro es AAAA-MM-DD HH:mm:ss [nivel] mensaje.
-
+  El formato de cada registro es AAAA-MM-DD HH:mm:ss [nivel] mensaje.
 El transporte de errores utiliza un filtro explícito que deja pasar únicamente error y fatal. Los archivos de auditoría internos de la rotación también se generan en logs/.
 
 En .gitignore debe figurar:
@@ -696,23 +684,22 @@ Verificación
    La interfaz se expone desde src/app.js mediante /api/docs, sin modificar la lógica de negocio.
    Endpoints documentados
    Tag     Método  Endpoint        Función
-Users   GET     /api/users      Listar usuarios
-Users   GET     /api/users/{uid}        Consultar usuario
-Users   POST    /api/users      Crear usuario
-Users   PUT     /api/users/{uid}        Actualizar nombre o apellido
-Users   DELETE  /api/users/{uid}        Eliminar usuario
-Orders  GET     /api/orders     Listar pedidos
-Orders  GET     /api/orders/{oid}       Consultar pedido
-Orders  POST    /api/orders     Crear pedido
-Orders  PUT     /api/orders/{oid}/status        Cambiar estado del pedido
-Orders  DELETE  /api/orders/{oid}       Eliminar pedido
-Mocks   GET     /api/mocks/users        Generar usuarios ficticios
-Mocks   GET     /api/mocks/couriers     Generar repartidores ficticios
-Mocks   GET     /api/mocks/orders       Generar pedidos ficticios
-Mocks / Deliveries      GET     /api/mocks/deliveries   Generar entregas ficticias
-Mocks   POST    /api/mocks/seed Insertar datos de prueba relacionados
-Logger  GET     /api/loggerTest Probar los seis niveles de logging
-
+   Users   GET     /api/users      Listar usuarios
+   Users   GET     /api/users/{uid}        Consultar usuario
+   Users   POST    /api/users      Crear usuario
+   Users   PUT     /api/users/{uid}        Actualizar nombre o apellido
+   Users   DELETE  /api/users/{uid}        Eliminar usuario
+   Orders  GET     /api/orders     Listar pedidos
+   Orders  GET     /api/orders/{oid}       Consultar pedido
+   Orders  POST    /api/orders     Crear pedido
+   Orders  PUT     /api/orders/{oid}/status        Cambiar estado del pedido
+   Orders  DELETE  /api/orders/{oid}       Eliminar pedido
+   Mocks   GET     /api/mocks/users        Generar usuarios ficticios
+   Mocks   GET     /api/mocks/couriers     Generar repartidores ficticios
+   Mocks   GET     /api/mocks/orders       Generar pedidos ficticios
+   Mocks / Deliveries      GET     /api/mocks/deliveries   Generar entregas ficticias
+   Mocks   POST    /api/mocks/seed Insertar datos de prueba relacionados
+   Logger  GET     /api/loggerTest Probar los seis niveles de logging
 Total del Módulo 5: 16 operaciones HTTP. Con los dos endpoints de carga del Módulo 7, el total actual es de 18 operaciones HTTP documentadas. Los tags requeridos son Users, Orders, Deliveries, Mocks y Logger. El endpoint de entregas ficticias aparece bajo dos tags; se trata de una sola operación, no de dos rutas diferentes.
 
 Aclaración sobre Deliveries: existe un modelo de entregas y generación de entregas mock, pero no un CRUD independiente /api/deliveries. La documentación no declara rutas inexistentes.
@@ -747,26 +734,25 @@ Cómo probar los endpoints
   tests/errorHandler.test.js      4       Errores duplicados, validación, conversión y fallas de MongoDB
   tests/logger.test.js    4       Endpoint, seis niveles, configuración y transportes de Winston
   Total   25      5 suites
-Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan errores para verificar sus respuestas sin provocar fallas reales en MongoDB. Los resultados corresponden a la ejecución local reportada durante la preparación de esta entrega.
-🧪 Testing funcional con Mocha, Chai y Supertest — Módulo 6
-En el Módulo 6 se incorporó una suite inicial de 24 tests funcionales que comprueba respuestas exitosas y errores HTTP esperados. En el Módulo 7 se añadieron 11 tests, alcanzando 35 tests funcionales. Se mantuvo la suite anterior de Jest con 25 tests, de manera que ambas herramientas se ejecutan por separado.
-Herramientas y ejecución
+  Las pruebas de los endpoints usan Supertest; las pruebas del middleware simulan errores para verificar sus respuestas sin provocar fallas reales en MongoDB. Los resultados corresponden a la ejecución local reportada durante la preparación de esta entrega.
+  🧪 Testing funcional con Mocha, Chai y Supertest — Módulo 6
+  En el Módulo 6 se incorporó una suite inicial de 24 tests funcionales que comprueba respuestas exitosas y errores HTTP esperados. En el Módulo 7 se añadieron 11 tests, alcanzando 35 tests funcionales. Se mantuvo la suite anterior de Jest con 25 tests, de manera que ambas herramientas se ejecutan por separado.
+  Herramientas y ejecución
 - Mocha: organiza y ejecuta los tests funcionales.
 - Chai: verifica códigos HTTP, estructura JSON y propiedades importantes.
 - Supertest: realiza solicitudes a la aplicación Express sin abrir manualmente un puerto.
 - Mongoose / MongoDB local: preparan datos relacionados y permiten verificar inserciones.
   src/app.js exporta la instancia de Express; src/server.js se encarga de conectar MongoDB y escuchar el puerto en la ejecución normal. Los tests importan directamente app.
-Desde la raíz del proyecto, después de ejecutar npm install:
-npm test
-npm run test:functional
-El primer comando ejecuta Jest; el segundo, Mocha. Jest ignora test/functional/ mediante testPathIgnorePatterns.
-Entorno de testing aislado
-La suite funcional usa el archivo local .env.test, que no debe subirse al repositorio:
-NODE_ENV=test
-PORT=8081
-MONGODB_URI=mongodb://127.0.0.1:27017/shipnow_test
-Es necesario tener MongoDB local en ejecución. La base shipnow_test se reserva exclusivamente para datos descartables. No usarla para información personal, de desarrollo o producción.
-
+  Desde la raíz del proyecto, después de ejecutar npm install:
+  npm test
+  npm run test:functional
+  El primer comando ejecuta Jest; el segundo, Mocha. Jest ignora test/functional/ mediante testPathIgnorePatterns.
+  Entorno de testing aislado
+  La suite funcional usa el archivo local .env.test, que no debe subirse al repositorio:
+  NODE_ENV=test
+  PORT=8081
+  MONGODB_URI=mongodb://127.0.0.1:27017/shipnow_test
+  Es necesario tener MongoDB local en ejecución. La base shipnow_test se reserva exclusivamente para datos descartables. No usarla para información personal, de desarrollo o producción.
 test/functional/helpers/testDatabase.js valida que NODE_ENV sea test, que la URI corresponda exactamente a MongoDB local con la base shipnow_test y que la conexión activa apunte a esa base antes de permitir una limpieza. Los tests crean los datos necesarios y eliminan los documentos de las colecciones de testing durante su preparación o finalización.
 Advertencia: la limpieza elimina documentos de las colecciones de shipnow_test. No ejecutar estas pruebas contra bases con información importante.
 
@@ -804,8 +790,8 @@ Se comprueban, entre otros, los siguientes comportamientos documentados:
   Jest (npm test) 25 tests aprobados, 5 suites
   Mocha (npm run test:functional) 35 tests aprobados
   Total   60 tests aprobados
-Resultados comprobados localmente el 16 de noviembre de 2026. Las suites cubren los escenarios enumerados, pero no todos los endpoints ni todas las combinaciones posibles de datos.
-🔐 Seguridad y buenas prácticas
+  Resultados comprobados localmente el 16 de noviembre de 2026. Las suites cubren los escenarios enumerados, pero no todos los endpoints ni todas las combinaciones posibles de datos.
+  🔐 Seguridad y buenas prácticas
 - Las contraseñas persistidas se almacenan mediante bcrypt.
 - Las variables de entorno se centralizan y validan.
 - El archivo .env no debe incluirse en Git.
@@ -819,14 +805,12 @@ Resultados comprobados localmente el 16 de noviembre de 2026. Las suites cubren 
 - Implementar autenticación y autorización para la carga de datos.
 - Ampliar la estrategia de limpieza para nuevos escenarios de pruebas, manteniendo el aislamiento de shipnow_test.
 - Ampliar los escenarios de mocking para simular diferentes etapas de entrega.
-- Agregar contenedores Docker.
-📎 Carga de archivos con Multer — Módulo 7
-El Módulo 7 permite adjuntar documentos a usuarios y comprobantes a pedidos existentes. Las solicitudes usan multipart/form-data y el campo binario se llama file. Los archivos se almacenan en el sistema de archivos del servidor y sus metadatos se guardan en MongoDB.
-Método	Endpoint	Campos	Descripción
-POST	/api/users/:uid/documents	documentType + file	Adjunta un documento al usuario
-POST	/api/orders/:oid/proof	file	Adjunta o reemplaza el comprobante del pedido
-
-
+- Incorporar integración continua y despliegue automatizado con Docker.
+  📎 Carga de archivos con Multer — Módulo 7
+  El Módulo 7 permite adjuntar documentos a usuarios y comprobantes a pedidos existentes. Las solicitudes usan multipart/form-data y el campo binario se llama file. Los archivos se almacenan en el sistema de archivos del servidor y sus metadatos se guardan en MongoDB.
+  Método  Endpoint        Campos  Descripción
+  POST    /api/users/:uid/documents       documentType + file     Adjunta un documento al usuario
+  POST    /api/orders/:oid/proof  file    Adjunta o reemplaza el comprobante del pedido
 Restricciones: se aceptan PDF (application/pdf), JPG (image/jpeg) y PNG (image/png) de hasta 5 MB. El tipo de documento del usuario debe ser dni, license u other. Se valida el MIME declarado y la firma inicial del archivo; esta verificación de firma no sustituye un análisis completo de archivos potencialmente maliciosos.
 
 Almacenamiento: los documentos se guardan en uploads/users/documents/ y los comprobantes en uploads/orders/proofs/. Los nombres almacenados se generan automáticamente. La carpeta uploads/ está excluida de Git; no se deben publicar documentos reales ni información sensible. El almacenamiento es local, no un servicio de nube.
@@ -839,24 +823,22 @@ Documento de usuario:
 3. En campos de texto, agregar documentType con valor dni.
 4. En archivos, agregar file y seleccionar un PDF, JPG o PNG válido.
 5. Enviar la solicitud. Una carga exitosa devuelve HTTP 201, status: success y payload.document.
-Comprobante de pedido:
-1. Elegir POST http://localhost:8080/api/orders/ID_DEL_PEDIDO/proof.
-2. Seleccionar Body → Form y adjuntar el archivo en el campo file.
-3. Enviar la solicitud. Una carga exitosa devuelve HTTP 201, status: success y payload.proof.
-Los identificadores deben corresponder a registros existentes en MongoDB. La especificación interactiva de ambos endpoints está en src/docs/uploads.yaml, disponible en http://localhost:8080/api/docs. La especificación actual documenta 18 operaciones HTTP.
-Errores de carga
-Código	HTTP	Situación
-FILE_REQUIRED	400	No se adjuntó un archivo
-INVALID_FILE_TYPE	400	Formato o firma de archivo no admitidos
-INVALID_DOCUMENT_TYPE	400	documentType fuera de los valores permitidos
-INVALID_FILE_FIELD	400	Nombre incorrecto del campo de archivo
-FILE_TOO_LARGE	413	Archivo superior a 5 MB
-USER_NOT_FOUND	404	Usuario inexistente
-ORDER_NOT_FOUND	404	Pedido inexistente
-INVALID_DATA	400	Identificador inválido
-FILE_UPLOAD_ERROR	500	Error de almacenamiento del archivo
-
-
+   Comprobante de pedido:
+6. Elegir POST http://localhost:8080/api/orders/ID_DEL_PEDIDO/proof.
+7. Seleccionar Body → Form y adjuntar el archivo en el campo file.
+8. Enviar la solicitud. Una carga exitosa devuelve HTTP 201, status: success y payload.proof.
+   Los identificadores deben corresponder a registros existentes en MongoDB. La especificación interactiva de ambos endpoints está en src/docs/uploads.yaml, disponible en http://localhost:8080/api/docs. La especificación actual documenta 18 operaciones HTTP.
+   Errores de carga
+   Código  HTTP    Situación
+   FILE_REQUIRED   400     No se adjuntó un archivo
+   INVALID_FILE_TYPE       400     Formato o firma de archivo no admitidos
+   INVALID_DOCUMENT_TYPE   400     documentType fuera de los valores permitidos
+   INVALID_FILE_FIELD      400     Nombre incorrecto del campo de archivo
+   FILE_TOO_LARGE  413     Archivo superior a 5 MB
+   USER_NOT_FOUND  404     Usuario inexistente
+   ORDER_NOT_FOUND 404     Pedido inexistente
+   INVALID_DATA    400     Identificador inválido
+   FILE_UPLOAD_ERROR       500     Error de almacenamiento del archivo
 Las respuestas de error siguen el formato { "status": "error", "code": "...", "message": "..." } del middleware global.
 Pruebas del Módulo 7
 El archivo test/functional/uploads.test.js agrega 11 tests para carga válida de documentos y comprobantes, persistencia de metadatos, archivo faltante, tipo de documento incorrecto, usuario/pedido inexistente, formato MIME rechazado, PDF con firma incorrecta, límite de tamaño, nombre de campo inválido y reemplazo de comprobante.
@@ -869,8 +851,157 @@ Consideración de seguridad: estos endpoints todavía no incorporan autenticaci�
 📚 Entrega
 Proyecto: ShipNow API  
 
-Pre-entregas: Módulos 1, 2, 3, 4, 5, 6 y 7  
+Pre-entregas: Módulos 1, 2, 3, 4, 5, 6, 7 y8
 
 Repositorio: https://github.com/elmirsantiago/shipnow-api
 
-El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores, logging con Winston y documentación interactiva con Swagger/OpenAPI. Las suites automatizadas cuentan con 60 pruebas aprobadas: 25 de Jest y 35 funcionales con Mocha, Chai y Supertest. El Módulo 7 añade carga de documentos y comprobantes con Multer, validación de archivos y documentación Swagger.
+El proyecto implementa una API REST con arquitectura por capas, mocking de datos relacionados, manejo centralizado de errores, logging con Winston, documentación Swagger/OpenAPI y carga de archivos con Multer. El Módulo 8 añade paginación, filtros, configuración de producción y Docker. Resultado actual: 72 pruebas aprobadas (25 Jest y 47 Mocha).
+🚀 Pre-entrega del Módulo 8 — Performance, producción y Docker
+Estado de verificación (23/11/2026): 5 suites de Jest con 25 tests aprobados; 47 tests funcionales Mocha aprobados; total 72/72. Imagen Docker shipnow-api:latest construida, contenedor iniciado en modo producción, conexión a MongoDB comprobada, /health exitoso, Swagger accesible y /api/mocks devuelve HTTP 404 en producción. Las pruebas de módulos anteriores documentadas arriba son registros históricos de sus respectivas entregas.
+
+1. Requisitos previos
+- Node.js >=22.13.0 <25 y npm para ejecución local.
+- MongoDB local accesible en el puerto 27017, o una URI de MongoDB válida.
+- Docker Desktop con motor Linux/WSL 2 para ejecutar el contenedor en Windows.
+- Puerto 8080 disponible, o un puerto alternativo configurado.
+2. Instalación local
+git clone https://github.com/elmirsantiago/shipnow-api.git
+cd shipnow-api
+npm ci --include=dev
+Crear .env a partir de .env.example:
+NODE_ENV=development
+PORT=8080
+MONGODB_URI=mongodb://127.0.0.1:27017/shipnow
+LOG_LEVEL=debug
+EXTERNAL_SERVICE_URL=
+Iniciar MongoDB y luego:
+npm run dev
+Para ejecución sin reinicio automático: npm start.
+3. Configuración y seguridad de variables
+Variable	Descripción	Valor / requisito
+NODE_ENV	Entorno de ejecución	development, test o production; por defecto development
+PORT	Puerto HTTP	Entero entre 1 y 65535; por defecto 8080
+MONGODB_URI	Conexión a MongoDB	Obligatoria; si falta, la aplicación no inicia
+LOG_LEVEL	Umbral de logging	fatal, error, warning, info, http o debug; por defecto info en producción y debug en otros entornos
+EXTERNAL_SERVICE_URL	URL HTTP(S) externa opcional	Vacía por defecto; se valida su formato cuando se proporciona; actualmente no implica una integración externa activa
+
+
+La configuración se centraliza en src/config/index.js. Los valores inválidos de entorno, puerto, URI faltante, nivel de logging o URL externa producen errores de configuración. No se ha implementado autenticación JWT en esta API; no se debe inventar ni publicar una variable JWT_SECRET que el proyecto no usa.
+
+Nunca subir .env, .env.test, contraseñas, archivos de usuarios ni credenciales de MongoDB a Git. .env.example y .env.test.example contienen solo valores de ejemplo.
+4. Performance: paginación y filtros
+Los listados de usuarios y pedidos usan consultas paginadas con límite máximo de 100 registros por solicitud y valores predeterminados page=1, limit=10. Se valida que page y limit sean enteros positivos y que limit no supere 100. Los pedidos admiten filtros opcionales por estado y prioridad.
+Método	Endpoint	Parámetros opcionales
+GET	/api/users	page, limit
+GET	/api/orders	page, limit, status, priority
+
+
+Ejemplos:
+GET /api/users?page=2&limit=10
+GET /api/orders?page=1&limit=20
+GET /api/orders?status=created&priority=high&page=2&limit=5
+Los estados válidos de pedidos son created, assigned, picked_up, in_transit, delivered y cancelled. Las prioridades válidas son low, normal y high. Los parámetros inválidos devuelven HTTP 400 con código INVALID_DATA.
+
+Ejemplo de estructura de respuesta para un listado:
+{
+  "status": "success",
+  "payload": [],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+Los totales son calculados con countDocuments aplicando los filtros correspondientes; la consulta usa skip y limit. En el listado de usuarios se excluye la contraseña. La API también limita los cuerpos JSON de Express a 100kb.
+
+Alcance: no se implementó un listado CRUD /api/deliveries independiente; las entregas ficticias se generan mediante mocks fuera de producción. Para volúmenes muy grandes podrían considerarse índices adicionales y paginación por cursor como mejora futura.
+5. Archivos: límites y almacenamiento
+Los endpoints existentes del Módulo 7 siguen disponibles:
+POST /api/users/:uid/documents
+POST /api/orders/:oid/proof
+Multer acepta un archivo por solicitud de hasta 5 MB, con MIME permitido application/pdf, image/jpeg o image/png. Se comprueba también la firma inicial del contenido, se generan nombres aleatorios con UUID y se eliminan los archivos rechazados por la validación del servicio. Los metadatos se guardan en MongoDB y los archivos en uploads/, fuera del control de versiones.
+
+Los archivos subidos requieren políticas de retención, copias de seguridad y controles de acceso para un uso real. La validación de firma no sustituye un antivirus. Los endpoints actuales no tienen autenticación ni autorización, por lo que no deben exponerse directamente a Internet con datos sensibles.
+6. Logging y comportamiento de producción
+Winston registra en consola según LOG_LEVEL. En desarrollo y test se habilitan archivos rotativos en logs/; en producción se utiliza la consola del contenedor para facilitar docker logs y la recolección externa de eventos. No se incluyen logs en la imagen Docker.
+
+Las rutas de desarrollo /api/mocks/* y /api/loggerTest se deshabilitan cuando NODE_ENV=production y responden HTTP 404. Swagger UI sigue disponible en /api/docs/, pero en producción oculta las rutas de mocks y loggerTest. En desarrollo y test se muestran para facilitar las pruebas.
+7. Health check
+GET /health
+Ejemplo de respuesta HTTP 200:
+{
+  "status": "ok",
+  "environment": "production",
+  "uptime": 62,
+  "timestamp": "2026-11-23T18:45:14.812Z"
+}
+uptime se expresa en segundos y timestamp es una fecha ISO 8601. No se exponen contraseñas ni secretos. Este endpoint informa que el servidor HTTP responde; no ejecuta por sí solo una comprobación de salud de MongoDB.
+8. Docker: construir y ejecutar
+El Dockerfile utiliza node:22-bookworm-slim, instala dependencias de producción con npm ci --omit=dev, copia src/, prepara /app/uploads, utiliza el usuario no privilegiado node y expone el puerto 8080. .dockerignore excluye secretos, dependencias locales, logs, archivos subidos, pruebas y temporales.
+
+Construir la imagen:
+docker build -t shipnow-api .
+MongoDB local en Windows con Docker Desktop: dentro del contenedor 127.0.0.1 no apunta al host Windows. Usar host.docker.internal si el servicio MongoDB del host permite esa conexión. Se comprobó la conectividad con:
+docker run --rm --add-host=host.docker.internal:host-gateway mongo:8 mongosh "mongodb://host.docker.internal:27017/admin?serverSelectionTimeoutMS=5000" --quiet --eval "db.runCommand({ping:1})"
+Respuesta obtenida: { ok: 1 }.
+
+Ejecutar el contenedor (ejemplo local):
+docker run -d --name shipnow-container -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e PORT=8080 \
+  -e LOG_LEVEL=info \
+  -e MONGODB_URI=mongodb://host.docker.internal:27017/shipnow \
+  -v shipnow_uploads:/app/uploads \
+  shipnow-api
+El volumen Docker shipnow_uploads conserva los archivos aunque se elimine y recree el contenedor. No ejecutar docker volume rm shipnow_uploads si hay archivos que deban conservarse. La base de datos del ejemplo reside en MongoDB del host, no dentro de la imagen.
+
+Para despliegues con credenciales, crear un archivo de variables fuera de Git y usar --env-file en vez de escribir secretos en el comando. Ejemplo de archivo .env.docker (no versionar):
+NODE_ENV=production
+PORT=8080
+MONGODB_URI=mongodb://host.docker.internal:27017/shipnow
+LOG_LEVEL=info
+Ejecutar:
+docker run -d --name shipnow-container -p 8080:8080 \
+  --env-file .env.docker \
+  -v shipnow_uploads:/app/uploads shipnow-api
+En Linux, host.docker.internal puede requerir agregar --add-host=host.docker.internal:host-gateway. Con MongoDB Atlas o un servicio remoto, reemplazar la URI por la correspondiente y aplicar las restricciones de red y autenticación apropiadas.
+
+Operaciones y diagnóstico:
+docker ps
+docker logs shipnow-container
+docker stop shipnow-container
+docker rm shipnow-container
+Para actualizar la imagen, detener y eliminar el contenedor, volver a ejecutar docker build y crear un contenedor nuevo con el mismo volumen. Si el puerto 8080 está ocupado por otra aplicación, detener esa aplicación o cambiar el mapeo a -p 8081:8080.
+
+Rutas de comprobación:
+- http://localhost:8080/health — estado HTTP.
+- http://localhost:8080/api/docs/ — documentación Swagger.
+- http://localhost:8080/api/users?page=1&limit=10 — listado paginado.
+- http://localhost:8080/api/orders?status=created&priority=high — listado filtrado.
+- http://localhost:8080/api/mocks — HTTP 404 en producción.
+En la comprobación local del Módulo 8, el contenedor mostró los mensajes Conexión a MongoDB establecida y Servidor ShipNow escuchando en el puerto 8080. El endpoint /health devolvió environment: production y Swagger se abrió correctamente.
+9. Testing reproducible
+Instalar también las dependencias de desarrollo:
+npm ci --include=dev
+Crear .env.test a partir de .env.test.example:
+NODE_ENV=test
+PORT=8081
+MONGODB_URI=mongodb://127.0.0.1:27017/shipnow_test
+Atención: las pruebas funcionales limpian las colecciones de shipnow_test; usar exclusivamente esa base de datos descartable. Tener MongoDB local iniciado antes de ejecutarlas.
+npm test
+npm run test:functional
+npm run test:all
+Suite	Resultado comprobado
+Jest	25 tests aprobados, 5 suites
+Mocha / Chai / Supertest	47 tests aprobados
+Total	72 tests aprobados
+
+
+En Módulo 8 se añadieron pruebas para paginación de usuarios y pedidos, límites inválidos, filtros por estado y prioridad, combinación de filtros con paginación y valores inválidos. La verificación de Docker y Swagger se realizó manualmente además de las pruebas automatizadas.
+10. Consideraciones antes de exponer la API públicamente
+Esta pre-entrega demuestra una configuración de producción local en Docker, no una plataforma pública completamente endurecida. Antes de un despliegue real se recomienda implementar autenticación/autorización, HTTPS mediante proxy, rate limiting, gestión segura de secretos, backups de MongoDB y archivos, observabilidad y escaneo adicional de documentos. No usar datos personales reales para las demostraciones.
+11. Repositorio y entrega
+Repositorio: https://github.com/elmirsantiago/shipnow-api
+
+La entrega del Módulo 8 incluye código de paginación y filtros, configuración de producción, documentación Swagger, Dockerfile, .dockerignore, README y suites de prueba actualizadas. Se debe verificar git status, ejecutar npm run test:all y realizar el commit/push solo después de revisar todos los cambios.
